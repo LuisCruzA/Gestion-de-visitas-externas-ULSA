@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-// 🔹 Interfaz para tipar el usuario (útil cuando conectes con tu backend)
+// 🔹 Interfaz opcional para tipado futuro (backend)
 interface Usuario {
   correo: string;
   contrasena: string;
@@ -18,40 +18,36 @@ export default function LoginPage() {
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
 
-  // Detecta el rol seleccionado
   const isAdmin = role === "admin";
 
-  // Colores dinámicos según el rol
+  // 🎨 Colores dinámicos según rol
   const bgGradient = isAdmin
-    ? "from-[#5C4402] to-[#B9932C]" // dorado oscuro
-    : "from-[#0A1E6A] to-[#1E3A8A]"; // azul institucional
-
+    ? "from-[#5C4402] to-[#B9932C]"
+    : "from-[#0A1E6A] to-[#1E3A8A]";
   const btnGradient = isAdmin
-    ? "from-[#D4AF37] to-[#FAD87A]" // botón dorado
-    : "from-blue-500 to-cyan-400"; // botón azul
+    ? "from-[#D4AF37] to-[#FAD87A]"
+    : "from-blue-500 to-cyan-400";
 
-  // 🔹 Manejo del inicio de sesión (ya listo para backend)
+  // 🔹 Manejo del inicio de sesión
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      // 🔸 Aquí se conectará al backend (ejemplo futuro)
-      // const res = await fetch("/api/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ correo, contrasena }),
-      // });
-      // const data: Usuario = await res.json();
-      // if (!res.ok) throw new Error(data.message);
-
-      // 🔹 Simulación temporal
-      if (!correo || !contrasena) {
-        throw new Error("Credenciales incorrectas.");
+      if (!correo.trim() || !contrasena.trim()) {
+        throw new Error("Por favor, completa todos los campos.");
       }
 
-      // Redirige con el rol seleccionado
-      router.push(`/bienvenida?rol=${role}`);
+      // 🔸 Aquí puedes integrar backend si lo deseas
+      // const res = await fetch("/api/login", {...});
+
+      // ✅ Guardar el rol en localStorage
+      try {
+        localStorage.setItem("rol", role);
+      } catch {}
+
+      // ✅ Redirigir correctamente a /Gestion (pantalla de bienvenida)
+      router.push(`/Gestion?rol=${role}`);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -71,7 +67,7 @@ export default function LoginPage() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-10 flex flex-col gap-6"
       >
-        {/* Logo simbólico */}
+        {/* 🔸 Logo */}
         <div className="flex justify-center mb-4">
           <div
             className={`w-16 h-16 ${
@@ -84,7 +80,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Encabezado */}
+        {/* 🔸 Encabezado */}
         <div className="text-center">
           <h1 className="text-3xl font-semibold text-white mb-1">
             Inicio de sesión
@@ -94,9 +90,8 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Formulario */}
+        {/* 🔸 Formulario */}
         <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-4">
-          {/* Correo */}
           <div className="flex flex-col">
             <label className="text-sm text-blue-100 mb-1">
               Correo electrónico
@@ -111,7 +106,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Contraseña */}
           <div className="flex flex-col">
             <label className="text-sm text-blue-100 mb-1">Contraseña</label>
             <input
@@ -124,7 +118,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Selector de rol */}
+          {/* 🔸 Selector de rol */}
           <div className="flex flex-col">
             <label className="text-sm text-blue-100 mb-1">Rol</label>
             <select
@@ -136,17 +130,17 @@ export default function LoginPage() {
                 Administrador del sistema
               </option>
               <option value="externo" className="text-black">
-                Administrador universitario
+                Usuario externo / Universitario
               </option>
             </select>
           </div>
 
-          {/* Mensaje de error */}
+          {/* 🔸 Mensaje de error */}
           {error && (
             <p className="text-red-300 text-sm text-center mt-2">{error}</p>
           )}
 
-          {/* Botón dinámico */}
+          {/* 🔸 Botón dinámico */}
           <button
             type="submit"
             className={`mt-2 w-full py-3 rounded-xl bg-gradient-to-r ${btnGradient} text-white font-semibold shadow-md hover:shadow-lg transition-transform hover:brightness-110`}
@@ -155,7 +149,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Footer */}
+        {/* 🔸 Footer */}
         <div className="text-center text-blue-200 text-sm mt-6">
           ¿No tienes cuenta?{" "}
           <a href="/register" className="text-white font-medium hover:underline">
