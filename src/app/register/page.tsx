@@ -16,8 +16,8 @@ export default function RegisterPage() {
   // Detecta el rol para cambiar el color de fondo dinámicamente
   const isAdmin = form.rol === "admin";
   const bgGradient = isAdmin
-    ? "from-[#5C4402] to-[#B9932C]" // dorado admin
-    : "from-[#0A1E6A] to-[#1E3A8A]"; // azul institucional
+    ? "from-[#5C4402] to-[#B9932C]"
+    : "from-[#0A1E6A] to-[#1E3A8A]";
 
   const btnGradient = isAdmin
     ? "from-[#D4AF37] to-[#FAD87A]" // dorado
