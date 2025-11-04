@@ -12,7 +12,7 @@ export default function NavBar({ rol = "externo" }: NavBarProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
 
-  // 🎨 Colores según el rol
+  // Colores según el rol
   const isAdmin = rol === "admin";
 
   const colorFondo = isAdmin
