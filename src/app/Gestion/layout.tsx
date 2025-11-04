@@ -46,7 +46,6 @@ export default function GestionLayout({
       className={`min-h-screen flex flex-col bg-gradient-to-b ${colorFondo} font-poppins transition-all duration-300`}
     >
       {/* Navbar global */}
-      <NavBar rol={rol} />
 
       {/*  Contenido dinámico (páginas internas) */}
       <main className="flex-1 p-6">{children}</main>

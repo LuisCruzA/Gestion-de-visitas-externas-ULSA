@@ -130,17 +130,17 @@ export default function LoginPage() {
                 Administrador del sistema
               </option>
               <option value="externo" className="text-black">
-                Usuario externo / Universitario
+                Administrador Universitario
               </option>
             </select>
           </div>
 
-          {/* 🔸 Mensaje de error */}
+          {/*  Mensaje de error */}
           {error && (
             <p className="text-red-300 text-sm text-center mt-2">{error}</p>
           )}
 
-          {/* 🔸 Botón dinámico */}
+          {/*  Botón dinámico */}
           <button
             type="submit"
             className={`mt-2 w-full py-3 rounded-xl bg-gradient-to-r ${btnGradient} text-white font-semibold shadow-md hover:shadow-lg transition-transform hover:brightness-110`}
