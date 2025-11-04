@@ -20,6 +20,60 @@ model Admin {
   correo String @unique
   contrasena String 
   rol String
-  //citas Cita[] 
+  citas Cita[] 
 
 }
+
+model Visitante {
+  id_visitante Int        @id @default(autoincrement())
+  nombre       String
+  genero       String
+  fechaNac     DateTime
+  ine          String
+  correo       String    // Eliminé `@unique` aquí.
+  celular      String
+  medioIngresos MedioIngreso[]
+  cita         Cita[]
+}
+
+
+model MedioIngreso {
+  id_ingreso    Int        @id @default(autoincrement())
+  visitante     Visitante  @relation(fields: [visitanteid], references: [id_visitante])
+  visitanteid   Int
+  forma_ingreso FormaIngreso
+  vehiculo      Vehiculo?  // Opcional
+}
+
+
+model Vehiculo {
+  id_vehiculo  Int          @id @default(autoincrement())
+  marca        String
+  modelo       String
+  id_ingreso   Int   @unique     
+  ingreso      MedioIngreso @relation(fields: [id_ingreso], references: [id_ingreso])
+}
+
+enum FormaIngreso {
+  PIE
+  CARRO
+}
+
+model Cita {
+  id_cita       Int       @id @default(autoincrement())
+  estado        Estado    @default(Actual)
+  fecha         DateTime
+  personaVisita String
+  departamento  String
+  adminId       Int
+  admin         Admin     @relation(fields: [adminId], references: [id_admin])
+  visitanteId   Int
+  visitante     Visitante @relation(fields: [visitanteId], references: [id_visitante])
+}
+
+
+enum Estado{
+  Actual
+  Expirado
+}
+
