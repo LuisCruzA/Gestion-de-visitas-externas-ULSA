@@ -20,10 +20,10 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { nombre, correo, contrasena, rol } = body;
+    const { nombre, correo, contrasena, areaAdmin } = body;
 
     const nuevoAdmin = await prisma.admin.create({
-      data: { nombre, correo, contrasena, rol },
+      data: { nombre, correo, contrasena, areaAdmin },
     });
 
     return new Response(JSON.stringify(nuevoAdmin), {
