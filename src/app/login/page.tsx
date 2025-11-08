@@ -127,7 +127,7 @@ export default function LoginPage() {
               className="px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white focus:outline-none focus:ring-2 focus:ring-cyan-300 appearance-none"
             >
               <option value="admin" className="text-black">
-                Administrador del sistema
+                Guardia
               </option>
               <option value="externo" className="text-black">
                 Administrador Universitario
@@ -149,13 +149,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* 🔸 Footer */}
-        <div className="text-center text-blue-200 text-sm mt-6">
-          ¿No tienes cuenta?{" "}
-          <a href="/register" className="text-white font-medium hover:underline">
-            Regístrate
-          </a>
-        </div>
       </motion.div>
     </div>
   );

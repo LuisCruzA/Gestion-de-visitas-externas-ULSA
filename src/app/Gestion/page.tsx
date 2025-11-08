@@ -8,11 +8,11 @@ export default function BienvenidaPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 🧠 Estado del rol
+  // Estado del rol
   const [rol, setRol] = useState("externo");
   const [accion, setAccion] = useState<string | null>(null);
 
-  // ✅ Cargar rol desde URL o localStorage (sin error de render sincrónico)
+  // Cargar rol desde URL o localStorage (sin error de render sincrónico)
   useEffect(() => {
     const rolUrl = searchParams.get("rol");
 
@@ -95,7 +95,7 @@ export default function BienvenidaPage() {
 
         {/* 🔸 Encabezado */}
         <h1 className="text-3xl font-semibold text-white text-center">
-          Bienvenido{isAdmin ? ", Administrador" : ", Usuario"}
+          Bienvenido{isAdmin ? ", Guardia" : ", Usuario"}
         </h1>
         <p className="text-blue-200 text-center max-w-md">
           Selecciona una acción para continuar con tu sesión.
@@ -103,12 +103,14 @@ export default function BienvenidaPage() {
 
         {/* 🔸 Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-          <button
-            onClick={() => handleAccion("registrar")}
-            className={`flex-1 py-3 rounded-xl bg-gradient-to-r ${btnGradient} text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.03] transition-transform`}
-          >
-            Registrar
-          </button>
+          {!isAdmin && (
+            <button
+              onClick={() => handleAccion("registrar")}
+              className={`flex-1 py-3 rounded-xl bg-gradient-to-r ${btnGradient} text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.03] transition-transform`}
+            >
+              Registrar
+            </button>
+          )}
 
           <button
             onClick={() => handleAccion("consultar")}

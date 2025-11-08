@@ -50,6 +50,13 @@ export default function RegistroPage() {
     if (typeof window === "undefined") return;
     const rolUrl = searchParams.get("rol");
     const saved = localStorage.getItem("rol");
+    
+    // Si el rol es admin (guardia), redirigir a consultas
+    if (rolUrl === "admin" || (!rolUrl && saved === "admin")) {
+      router.push("/Gestion/consultas?rol=admin");
+      return;
+    }
+
     if (rolUrl && rolUrl !== rol) {
       setTimeout(() => {
         setRol(rolUrl);
@@ -58,7 +65,7 @@ export default function RegistroPage() {
     } else if (!rolUrl && saved && saved !== rol) {
       setTimeout(() => setRol(saved), 0);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const isAdmin = rol === "admin";
 
@@ -98,10 +105,6 @@ export default function RegistroPage() {
     if (paso === 2) {
       if (!form.fechaVisita.trim())
         nuevosErrores.fechaVisita = "Debes ingresar fecha y hora.";
-      if (!form.personaVisita.trim())
-        nuevosErrores.personaVisita = "Debes indicar a quién visitas.";
-      if (!form.area.trim())
-        nuevosErrores.area = "Debes indicar el área o departamento.";
     }
     if (paso === 3) {
       if (!form.medioIngreso.trim())
@@ -134,9 +137,7 @@ export default function RegistroPage() {
         // Limpiar campos del paso 2
         setForm(prev => ({
           ...prev,
-          fechaVisita: "",
-          personaVisita: "",
-          area: ""
+          fechaVisita: ""
         }));
         break;
       case 3:
@@ -179,9 +180,7 @@ export default function RegistroPage() {
             case 2:
               setForm(prev => ({
                 ...prev,
-                fechaVisita: datosActuales.fechaVisita,
-                personaVisita: datosActuales.personaVisita,
-                area: datosActuales.area
+                fechaVisita: datosActuales.fechaVisita
               }));
               break;
           }
@@ -261,7 +260,7 @@ export default function RegistroPage() {
           className={`${colorPrincipal} shadow-xl px-10 py-4 flex justify-between items-center`}
         >
           <h1 className="text-xl font-bold text-white">
-            {isAdmin ? "Panel Administrador" : "Panel Universitario"}
+            {isAdmin ? "Panel de Guardia" : "Panel Universitario"}
           </h1>
           <button
             onClick={() => router.push("/login")}
@@ -327,18 +326,20 @@ export default function RegistroPage() {
               👤
             </div>
             <p className="mt-3 font-semibold text-lg">
-              {isAdmin ? "Administrador" : "Universitario"}
+              {isAdmin ? "Guardia" : "Universitario"}
             </p>
           </div>
           <nav className="flex flex-col gap-4">
-            <button
-              onClick={() => setPaso(1)}
-              className={`text-left py-2 px-4 rounded-lg flex items-center gap-2 ${
-                paso === 1 ? "bg-white/25" : "hover:bg-white/10"
-              }`}
-            >
-              <FiPlus className="w-5 h-5" /> Registrar cita
-            </button>
+            {!isAdmin && (
+              <button
+                onClick={() => setPaso(1)}
+                className={`text-left py-2 px-4 rounded-lg flex items-center gap-2 ${
+                  paso === 1 ? "bg-white/25" : "hover:bg-white/10"
+                }`}
+              >
+                <FiPlus className="w-5 h-5" /> Registrar cita
+              </button>
+            )}
             <button
               onClick={() => go("/Gestion/consultas")}
               className="text-left py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-white/10"
@@ -463,60 +464,22 @@ export default function RegistroPage() {
                 >
                   2 Datos de la cita
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col">
-                    <label className="text-gray-600 mb-1">
-                      Fecha y horario
-                    </label>
-                    <input
-                      type="datetime-local"
-                      name="fechaVisita"
-                      value={form.fechaVisita}
-                      onChange={handleChange}
-                      className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                    {tocado && errores.fechaVisita && (
-                      <span className="text-red-500 text-sm mt-1">
-                        {errores.fechaVisita}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col">
-                    <label className="text-gray-600 mb-1">
-                      Persona a quien visita
-                    </label>
-                    <input
-                      type="text"
-                      name="personaVisita"
-                      value={form.personaVisita}
-                      onChange={handleChange}
-                      className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                    {tocado && errores.personaVisita && (
-                      <span className="text-red-500 text-sm mt-1">
-                        {errores.personaVisita}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col md:col-span-2">
-                    <label className="text-gray-600 mb-1">
-                      Área o departamento
-                    </label>
-                    <input
-                      type="text"
-                      name="area"
-                      value={form.area}
-                      onChange={handleChange}
-                      className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                    {tocado && errores.area && (
-                      <span className="text-red-500 text-sm mt-1">
-                        {errores.area}
-                      </span>
-                    )}
-                  </div>
+                <div className="flex flex-col w-full max-w-md mx-auto">
+                  <label className="text-gray-600 mb-1">
+                    Fecha y horario
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="fechaVisita"
+                    value={form.fechaVisita}
+                    onChange={handleChange}
+                    className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  {tocado && errores.fechaVisita && (
+                    <span className="text-red-500 text-sm mt-1">
+                      {errores.fechaVisita}
+                    </span>
+                  )}
                 </div>
               </motion.div>
             )}
