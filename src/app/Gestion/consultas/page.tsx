@@ -7,12 +7,22 @@ import { FiLogOut, FiList, FiPlus, FiDownload } from "react-icons/fi";
 export default function ConsultasPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [nombre, setNombre] = useState("");
+  
   const [rol, setRol] = useState("externo");
 
   // Cargar rol desde URL o localStorage
   useEffect(() => {
-    const rolUrl = searchParams.get("rol");
+    const rolUrl = sessionStorage.getItem("rol");
     const saved = localStorage.getItem("rol");
+    const savedName = sessionStorage.getItem("nombre");
+
+    if (!rolUrl) {
+      router.push("/login");
+    } else {
+      setRol(rolUrl);
+      setNombre(savedName || "");
+    }
     
     const actualizarRol = () => {
       if (rolUrl && rolUrl !== rol) {
