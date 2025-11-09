@@ -6,6 +6,8 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { fecha, adminId, visitante, medioIngreso, vehiculo } = body;
+    const fechaobj = new Date(fecha); // Mantener la hora local del frontend
+
 
     // Crear el visitante
     const newVisitante = await prisma.visitante.create({
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
     });
 
     // Crear el vehículo si lo hay
-    let newVehiculo = null;
+    let newVehiculo = null ;
     if (vehiculo) {
       newVehiculo = await prisma.vehiculo.create({
         data: {
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
     // Crear la cita
     const newCita = await prisma.cita.create({
       data: {
-        fecha: new Date(fecha),
+        fecha: fechaobj,
         adminId: adminId,
         visitanteId: newVisitante.id_visitante,
         estado: 'Actual',
