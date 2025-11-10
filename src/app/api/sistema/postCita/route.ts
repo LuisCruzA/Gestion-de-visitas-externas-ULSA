@@ -73,7 +73,6 @@ export async function POST(req: Request) {
       - Fecha y hora de la cita: ${newCita.fecha}
       - Medio de ingreso: ${medioIngreso.forma_ingreso}
     `;
-    await sendEmail(admin.correo, adminSubject, adminText);
 
 
     // Enviar correo al visitante
@@ -88,7 +87,11 @@ export async function POST(req: Request) {
       
       ¡Nos vemos pronto!
     `;
-    await sendEmail(newVisitante.correo, visitanteSubject, visitanteText);
+
+    Promise.all([
+      sendEmail(admin.correo, adminSubject, adminText),
+      sendEmail(newVisitante.correo, visitanteSubject, visitanteText),
+    ])
 
     return new Response(JSON.stringify({ message: 'Cita creada exitosamente', newCita }), {
       status: 201,
