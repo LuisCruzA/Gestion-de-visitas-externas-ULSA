@@ -51,6 +51,9 @@ export default function LoginPage() {
         const rol = data.admin.esSuperadmin ? "superadmin" : "admin";
         sessionStorage.setItem("rol", rol);
         sessionStorage.setItem("nombre", data.admin.nombre);
+        sessionStorage.setItem("correo", data.admin.correo);
+        sessionStorage.setItem("id", data.admin.id_admin);
+        sessionStorage.setItem("area", data.admin.areaAdmin);
 
       // ✅ Redirigir correctamente a /Gestion (pantalla de bienvenida)
       router.push(`/Gestion?rol=${rol}`);
