@@ -39,6 +39,7 @@ interface SidebarProps {
 
 export function useFormLogic() {
   const [paso, setPaso] = useState(1);
+  const [idAdmin, setIdAdmin] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>({
     nombre: "",
     ine: "",
@@ -57,6 +58,14 @@ export function useFormLogic() {
   const [tocado, setTocado] = useState(false);
   const [exito, setExito] = useState(false);
 
+  useEffect(() => {
+      const idadmin = sessionStorage.getItem("id");
+
+      if (idadmin) {
+        setIdAdmin(Number(idadmin));
+      }
+    }, []);
+
   const validarPaso = () => {
     const nuevosErrores: {[key: string]: string} = {};
     if (paso === 1) {
@@ -64,7 +73,22 @@ export function useFormLogic() {
       if (!form.ine.trim()) nuevosErrores.ine = "El INE es obligatorio.";
       if (!form.genero.trim()) nuevosErrores.genero = "El género es obligatorio.";
       if (!form.correo.trim()) nuevosErrores.correo = "El correo es obligatorio.";
-      if (!form.nacimiento.trim()) nuevosErrores.nacimiento = "La fecha de nacimiento es obligatoria.";
+      if (!form.nacimiento.trim()) {
+        nuevosErrores.nacimiento = "La fecha de nacimiento es obligatoria.";
+      } else {
+        // 🧠 Validar que tenga al menos 15 años
+        const fechaNacimiento = new Date(form.nacimiento);
+        const hoy = new Date();
+
+        const edad =
+          hoy.getFullYear() -
+          fechaNacimiento.getFullYear() -
+          (hoy < new Date(hoy.getFullYear(), fechaNacimiento.getMonth(), fechaNacimiento.getDate()) ? 1 : 0);
+
+        if (edad < 15) {
+          nuevosErrores.nacimiento = "Debes tener al menos 15 años para continuar.";
+        }
+      }
       if (!form.telefono.trim()) nuevosErrores.telefono = "El teléfono es obligatorio.";
       
       // Validar formato de correo
@@ -86,7 +110,7 @@ export function useFormLogic() {
         if (fecha < ahora) {
           nuevosErrores.fechaVisita = "La fecha no puede ser anterior a hoy.";
         }
-        // Validar domingo y horario de sábado
+
         const dia = fecha.getDay();
         const hora = fecha.getHours();
         const minutos = fecha.getMinutes();
@@ -96,8 +120,29 @@ export function useFormLogic() {
         } else if (dia === 6 && (hora > 16 || (hora === 16 && minutos > 0))) {
           nuevosErrores.fechaVisita = "Los sábados solo se pueden agendar citas hasta las 4:00 PM.";
         }
+
+        // 🕒 Verificar disponibilidad de horario
+        // Solo ejecutar si no hay errores hasta este punto
+        if (Object.keys(nuevosErrores).length === 0) {
+          // Esta validación será asíncrona
+          return fetch(`/api/citas?fecha=${fecha.toISOString().split("T")[0]}&adminId=${idAdmin}`)
+            .then(res => res.json())
+            .then((citas: { fecha: string }[]) => {
+              const conflicto = citas.some(c => {
+                const citaHora = new Date(c.fecha);
+                const diffHoras = Math.abs((fecha.getTime() - citaHora.getTime()) / (1000 * 60 * 60));
+                return diffHoras < .5; // Choque de menos de 1 hora
+              });
+              if (conflicto) {
+                nuevosErrores.fechaVisita = "Ya existe una cita en este horario.";
+              }
+              setErrores(nuevosErrores);
+              return Object.keys(nuevosErrores).length === 0;
+            });
+        }
       }
     }
+
     if (paso === 3) {
       if (!form.medioIngreso.trim()) nuevosErrores.medioIngreso = "Selecciona un medio de ingreso.";
       if (form.medioIngreso === "vehiculo") {
@@ -144,9 +189,10 @@ export function useFormLogic() {
     }
   };
 
-  const siguientePaso = () => {
+  const siguientePaso = async () => {
     setTocado(true);
-    if (validarPaso()) {
+    const esValido = await validarPaso();
+    if (esValido) {
       setTocado(false);
       if (paso < 3) {
         const siguientePasoNum = paso + 1;
@@ -436,7 +482,7 @@ function Sidebar({
   const enviarCita = async () => {
     const data = {
       fecha: form.fechaVisita,
-      adminId: idAdmin, // Mockeamos el adminId como 1 por ahora
+      adminId: idAdmin,
       visitante: {
         nombre: form.nombre,
         genero: form.genero,
