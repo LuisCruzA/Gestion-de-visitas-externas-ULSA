@@ -11,12 +11,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendEmail = (to:string , subject:string , text:string ) => {
+const sendEmail = (to:string , subject:string , text:string, html?:string ) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,  // El correo que enviará el mensaje
     to,
     subject,
     text,
+    html: html || text,
   };
 
   return transporter.sendMail(mailOptions);
