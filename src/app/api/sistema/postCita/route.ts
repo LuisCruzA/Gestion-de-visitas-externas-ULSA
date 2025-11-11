@@ -9,6 +9,28 @@ export async function POST(req: Request) {
     const { fecha, adminId, visitante, medioIngreso, vehiculo } = body;
     const fechaobj = new Date(fecha); // Mantener la hora local del frontend
 
+    const inicio = new Date(fechaobj);
+    const fin = new Date(fechaobj);
+    fin.setHours(inicio.getHours() + .5);
+
+    // Verificar si el admin ya tiene una cita en ese horario
+    const citaExistente = await prisma.cita.findFirst({
+      where: {
+        adminId: adminId,
+        fecha: {
+          gte: inicio,
+          lt: fin,     // traslape parcial
+        },
+      },
+    });
+
+    if (citaExistente) {
+      return new Response(
+        JSON.stringify({ error: "El administrador ya tiene una cita en ese horario." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
 
     // Crear el visitante
     const newVisitante = await prisma.visitante.create({
