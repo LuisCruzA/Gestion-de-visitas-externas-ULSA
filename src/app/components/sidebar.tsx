@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiLogOut, FiList, FiPlus } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
@@ -419,10 +419,24 @@ function Sidebar({
     handleSubmit,
   } = useFormLogic();
 
+  const [idAdmin, setIdAdmin] = useState<number | null>(null);
+  const [nombre, setNombre] = useState("");
+
+  useEffect(() => {
+    const id = sessionStorage.getItem("id");
+    if (id) {
+      setIdAdmin(Number(id));
+    }
+    const savedName = sessionStorage.getItem("nombre");
+    if (savedName) {
+      setNombre(savedName);
+    }
+  }, []);
+
   const enviarCita = async () => {
     const data = {
       fecha: form.fechaVisita,
-      adminId: 1, // Mockeamos el adminId como 1 por ahora
+      adminId: idAdmin, // Mockeamos el adminId como 1 por ahora
       visitante: {
         nombre: form.nombre,
         genero: form.genero,
@@ -521,7 +535,7 @@ function Sidebar({
               👤
             </div>
             <p className="mt-3 font-semibold text-lg">
-              {isAdmin ? "Guardia" : "Universitario"}
+              Hola! {nombre}
             </p>
           </div>
           <nav className="flex flex-col gap-4">

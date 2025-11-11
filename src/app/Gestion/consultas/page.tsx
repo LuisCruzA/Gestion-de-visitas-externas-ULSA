@@ -67,7 +67,7 @@ export default function ConsultasPage() {
               👤
             </div>
             <p className="mt-3 font-semibold text-lg text-white">
-              {isAdmin ? "Guardia" : "Universitario"}
+              Hola! {nombre}
             </p>
           </div>
           <nav className="flex flex-col gap-4">
