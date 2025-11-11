@@ -64,7 +64,7 @@ export default function NavBar({ rol = "externo" }: NavBarProps) {
         {/* Botón Salir */}
         <button
           onClick={() => {
-            localStorage.removeItem("rol");
+            sessionStorage.clear();
             router.push("/login");
           }}
           className="px-5 py-2 rounded-xl bg-white/30 text-white font-semibold shadow hover:bg-white/40 transition"
