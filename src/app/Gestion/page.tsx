@@ -10,11 +10,20 @@ export default function BienvenidaPage() {
 
   // Estado del rol
   const [rol, setRol] = useState("externo");
+  const [nombre, setNombre] = useState("");
   const [accion, setAccion] = useState<string | null>(null);
 
   // Cargar rol desde URL o localStorage (sin error de render sincrónico)
   useEffect(() => {
-    const rolUrl = searchParams.get("rol");
+    const rolUrl = sessionStorage.getItem("rol");
+    const savedName = sessionStorage.getItem("nombre");
+
+    if (!rolUrl) {
+      router.push("/login");
+    } else {
+      setRol(rolUrl);
+      setNombre(savedName || "");
+    }
 
     const actualizarRol = () => {
       if (rolUrl) {
@@ -56,7 +65,7 @@ export default function BienvenidaPage() {
       router.push(`/Gestion/consultas?rol=${rol}`);
     } else if (tipo === "salir") {
       try {
-        localStorage.removeItem("rol");
+        sessionStorage.clear();
       } catch {}
       router.push("/login");
     }
@@ -95,7 +104,7 @@ export default function BienvenidaPage() {
 
         {/* 🔸 Encabezado */}
         <h1 className="text-3xl font-semibold text-white text-center">
-          Bienvenido{isAdmin ? ", Guardia" : ", Usuario"}
+          Bienvenido(a) {nombre}
         </h1>
         <p className="text-blue-200 text-center max-w-md">
           Selecciona una acción para continuar con tu sesión.

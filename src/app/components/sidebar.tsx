@@ -1,9 +1,9 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiLogOut, FiList, FiPlus } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, } from "framer-motion";
 
 // Formulario y lógica del formulario
 interface FormData {
@@ -14,11 +14,14 @@ interface FormData {
   nacimiento: string;
   telefono: string;
   fechaVisita: string;
-  personaVisita: string;
-  area: string;
+  personaVisita?: string;
+  area?: string;
   medioIngreso: string;
   marca: string;
   modelo: string;
+  placas?:string;
+  color?: string;
+  conoces?:string;
 }
 
 
@@ -39,6 +42,7 @@ interface SidebarProps {
 
 export function useFormLogic() {
   const [paso, setPaso] = useState(1);
+  const [idAdmin, setIdAdmin] = useState<number | null>(null);
   const [form, setForm] = useState<FormData>({
     nombre: "",
     ine: "",
@@ -52,10 +56,21 @@ export function useFormLogic() {
     medioIngreso: "",
     marca: "",
     modelo: "",
+    color:"",
+    placas:""
+
   });
   const [errores, setErrores] = useState<{[key: string]: string}>({});
   const [tocado, setTocado] = useState(false);
   const [exito, setExito] = useState(false);
+
+  useEffect(() => {
+      const idadmin = sessionStorage.getItem("id");
+
+      if (idadmin) {
+        setIdAdmin(Number(idadmin));
+      }
+    }, []);
 
   const validarPaso = () => {
     const nuevosErrores: {[key: string]: string} = {};
@@ -64,7 +79,22 @@ export function useFormLogic() {
       if (!form.ine.trim()) nuevosErrores.ine = "El INE es obligatorio.";
       if (!form.genero.trim()) nuevosErrores.genero = "El género es obligatorio.";
       if (!form.correo.trim()) nuevosErrores.correo = "El correo es obligatorio.";
-      if (!form.nacimiento.trim()) nuevosErrores.nacimiento = "La fecha de nacimiento es obligatoria.";
+      if (!form.nacimiento.trim()) {
+        nuevosErrores.nacimiento = "La fecha de nacimiento es obligatoria.";
+      } else {
+        // 🧠 Validar que tenga al menos 15 años
+        const fechaNacimiento = new Date(form.nacimiento);
+        const hoy = new Date();
+
+        const edad =
+          hoy.getFullYear() -
+          fechaNacimiento.getFullYear() -
+          (hoy < new Date(hoy.getFullYear(), fechaNacimiento.getMonth(), fechaNacimiento.getDate()) ? 1 : 0);
+
+        if (edad < 15) {
+          nuevosErrores.nacimiento = "Debes tener al menos 15 años para continuar.";
+        }
+      }
       if (!form.telefono.trim()) nuevosErrores.telefono = "El teléfono es obligatorio.";
       
       // Validar formato de correo
@@ -86,7 +116,7 @@ export function useFormLogic() {
         if (fecha < ahora) {
           nuevosErrores.fechaVisita = "La fecha no puede ser anterior a hoy.";
         }
-        // Validar domingo y horario de sábado
+
         const dia = fecha.getDay();
         const hora = fecha.getHours();
         const minutos = fecha.getMinutes();
@@ -96,8 +126,29 @@ export function useFormLogic() {
         } else if (dia === 6 && (hora > 16 || (hora === 16 && minutos > 0))) {
           nuevosErrores.fechaVisita = "Los sábados solo se pueden agendar citas hasta las 4:00 PM.";
         }
+
+        // 🕒 Verificar disponibilidad de horario
+        // Solo ejecutar si no hay errores hasta este punto
+        if (Object.keys(nuevosErrores).length === 0) {
+          // Esta validación será asíncrona
+          return fetch(`/api/citas?fecha=${fecha.toISOString().split("T")[0]}&adminId=${idAdmin}`)
+            .then(res => res.json())
+            .then((citas: { fecha: string }[]) => {
+              const conflicto = citas.some(c => {
+                const citaHora = new Date(c.fecha);
+                const diffHoras = Math.abs((fecha.getTime() - citaHora.getTime()) / (1000 * 60 * 60));
+                return diffHoras < .5; // Choque de menos de 1 hora
+              });
+              if (conflicto) {
+                nuevosErrores.fechaVisita = "Ya existe una cita en este horario.";
+              }
+              setErrores(nuevosErrores);
+              return Object.keys(nuevosErrores).length === 0;
+            });
+        }
       }
     }
+
     if (paso === 3) {
       if (!form.medioIngreso.trim()) nuevosErrores.medioIngreso = "Selecciona un medio de ingreso.";
       if (form.medioIngreso === "vehiculo") {
@@ -130,7 +181,9 @@ export function useFormLogic() {
       case 2:
         setForm(prev => ({
           ...prev,
-          fechaVisita: ""
+          fechaVisita: "",
+          personaVisita:"",
+          area:""
         }));
         break;
       case 3:
@@ -138,15 +191,18 @@ export function useFormLogic() {
           ...prev,
           medioIngreso: "",
           marca: "",
-          modelo: ""
+          modelo: "",
+          placas:"",
+          color:"",
         }));
         break;
     }
   };
 
-  const siguientePaso = () => {
+  const siguientePaso = async () => {
     setTocado(true);
-    if (validarPaso()) {
+    const esValido = await validarPaso();
+    if (esValido) {
       setTocado(false);
       if (paso < 3) {
         const siguientePasoNum = paso + 1;
@@ -169,7 +225,9 @@ export function useFormLogic() {
             case 2:
               setForm(prev => ({
                 ...prev,
-                fechaVisita: datosActuales.fechaVisita
+                fechaVisita: datosActuales.fechaVisita,
+                area: datosActuales.area,
+                personaVisita: datosActuales.personaVisita
               }));
               break;
           }
@@ -202,7 +260,9 @@ export function useFormLogic() {
           case 2:
             setForm(prev => ({
               ...prev,
-              fechaVisita: datosActuales.fechaVisita
+              fechaVisita: datosActuales.fechaVisita,
+              area: datosActuales.area,
+                personaVisita: datosActuales.personaVisita
             }));
             break;
         }
@@ -224,6 +284,8 @@ export function useFormLogic() {
       medioIngreso: "",
       marca: "",
       modelo: "",
+      placas:"",
+      color:""
     });
     setErrores({});
     setTocado(false);
@@ -326,9 +388,75 @@ function FormularioDatosCita({ form, errores, handleChange, tocado }: FormProps)
           <span className="text-red-500 text-sm mt-1">{errores.fechaVisita}</span>
         )}
       </div>
+
+      {/* Pregunta si conoce el área o la persona a visitar */}
+      <div className="flex flex-col mt-10 items-center">
+        <label className="text-gray-600 mb-1">¿Conoces el área o la persona a visitar?</label>
+
+        <div className="flex items-center mb-2">
+          <input
+            type="radio"
+            id="areaConocida"
+            name="conoces"
+            value="si"
+            checked={form.conoces === "si"}
+            onChange={handleChange}
+            className="mr-2"
+          />
+          <label htmlFor="areaConocida" className="text-gray-600">Sí</label>
+
+          <input
+            type="radio"
+            id="areaNoConocida"
+            name="conoces"
+            value="no"
+            checked={form.conoces === "no"}
+            onChange={handleChange}
+            className="ml-4 mr-2"
+          />
+          <label htmlFor="areaNoConocida" className="text-gray-600">No</label>
+        </div>
+      </div>
+
+      {/* Si "Sí" es seleccionado, mostramos los campos adicionales */}
+      {form.conoces === "si" && (
+        <>
+          <div className="flex flex-col">
+            <label className="text-gray-600 mb-1">Área</label>
+            <input
+              name="area"
+              value={form.area || ""}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              
+            </input>
+            {tocado && errores.area && (
+              <span className="text-red-500 text-sm mt-1">{errores.area}</span>
+            )}
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-gray-600 mb-1">Persona a visitar</label>
+            <input
+              type="text"
+              name="personaVisita"
+              value={form.personaVisita}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {tocado && errores.personaVisita && (
+              <span className="text-red-500 text-sm mt-1">{errores.personaVisita}</span>
+            )}
+          </div>
+        </>
+      )}
+
     </motion.div>
   );
 }
+
+
 
 function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormProps) {
   return (
@@ -386,6 +514,32 @@ function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormPro
                 <span className="text-red-500 text-sm mt-1">{errores.modelo}</span>
               )}
             </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-1">Placas del vehículo</label>
+              <input
+                type="text"
+                name="placas"
+                value={form.placas}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              {tocado && errores.placas && (
+                <span className="text-red-500 text-sm mt-1">{errores.placas}</span>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-1">Color del vehículo</label>
+              <input
+                type="text"
+                name="color"
+                value={form.color}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              {tocado && errores.color && (
+                <span className="text-red-500 text-sm mt-1">{errores.color}</span>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -419,10 +573,26 @@ function Sidebar({
     handleSubmit,
   } = useFormLogic();
 
+  const [idAdmin, setIdAdmin] = useState<number | null>(null);
+  const [nombre, setNombre] = useState("");
+
+  useEffect(() => {
+    const id = sessionStorage.getItem("id");
+    if (id) {
+      setIdAdmin(Number(id));
+    }
+    const savedName = sessionStorage.getItem("nombre");
+    if (savedName) {
+      setNombre(savedName);
+    }
+  }, []);
+
   const enviarCita = async () => {
+    console.log("Estado de form antes de enviar:", form);
+
     const data = {
       fecha: form.fechaVisita,
-      adminId: 1, // Mockeamos el adminId como 1 por ahora
+      adminId: idAdmin,
       visitante: {
         nombre: form.nombre,
         genero: form.genero,
@@ -431,14 +601,22 @@ function Sidebar({
         correo: form.correo,
         celular: form.telefono,
       },
+      cita: {
+        area: form.area,  // 'area' va aquí directamente
+        personaVisitada: form.personaVisita
+      },
       medioIngreso: {
         forma_ingreso: form.medioIngreso,
+        
       },
       vehiculo: form.medioIngreso === "CARRO" ? {
         marca: form.marca,
         modelo: form.modelo,
+        placas:form.placas,
+        color:form.color
       } : null,
     };
+    console.log("Datos a enviar:", data); // Aquí verifica que `area` esté en `data`
 
     try {
       const response = await fetch("/api/sistema/postCita", {
@@ -521,7 +699,7 @@ function Sidebar({
               👤
             </div>
             <p className="mt-3 font-semibold text-lg">
-              {isAdmin ? "Guardia" : "Universitario"}
+              Hola! {nombre}
             </p>
           </div>
           <nav className="flex flex-col gap-4">

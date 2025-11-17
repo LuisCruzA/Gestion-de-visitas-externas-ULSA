@@ -6,8 +6,31 @@ import { sendEmail } from "@/app/lib/nodemailer";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { fecha, adminId, visitante, medioIngreso, vehiculo } = body;
+    console.log("Datos recibidos en el backend:", body);
+    const { fecha, adminId, visitante, medioIngreso, vehiculo,cita } = body;
     const fechaobj = new Date(fecha); // Mantener la hora local del frontend
+
+    const inicio = new Date(fechaobj);
+    const fin = new Date(fechaobj);
+    fin.setHours(inicio.getHours() + .5);
+
+    // Verificar si el admin ya tiene una cita en ese horario
+    const citaExistente = await prisma.cita.findFirst({
+      where: {
+        adminId: adminId,
+        fecha: {
+          gte: inicio,
+          lt: fin,     // traslape parcial
+        },
+      },
+    });
+
+    if (citaExistente) {
+      return new Response(
+        JSON.stringify({ error: "El administrador ya tiene una cita en ese horario." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
 
     // Crear el visitante
@@ -37,6 +60,8 @@ export async function POST(req: Request) {
         data: {
           marca: vehiculo.marca,
           modelo: vehiculo.modelo,
+          color:vehiculo.color,
+          placas:vehiculo.placas,
           id_ingreso: newIngreso.id_ingreso,
         },
       });
@@ -46,6 +71,8 @@ export async function POST(req: Request) {
     const newCita = await prisma.cita.create({
       data: {
         fecha: fechaobj,
+        area: cita.area ,
+        personaVisitada:cita.personaVisitada,
         adminId: adminId,
         visitanteId: newVisitante.id_visitante,
         estado: 'Actual',
@@ -104,6 +131,9 @@ export async function POST(req: Request) {
             <p> <strong>Fecha:</strong> ${new Date(newCita.fecha).toLocaleString('es-MX')}</p>
             <p> <strong>Ingreso:</strong> ${medioIngreso.forma_ingreso}</p>
             ${vehiculo ? `<p><strong>Vehículo:</strong> ${vehiculo.marca} ${vehiculo.modelo}</p>` : ''}
+            <p> <strong>Area:</strong> ${newCita.area}</p>
+            <p> <strong>Persona a visitar:</strong> ${newCita.personaVisitada}</p>
+
           </div>
           <div style="background: #E0F2FE; padding: 10px; border-left: 4px solid #0EA5E9; margin: 15px 0;">
             <p style="margin: 5px 0;"><strong>Recordatorios:</strong></p>
@@ -123,6 +153,8 @@ export async function POST(req: Request) {
       sendEmail(admin.correo, adminSubject, adminText),
       sendEmail(newVisitante.correo, visitanteSubject, visitanteText),
     ])
+    console.log("Datos guardados en el backend:", newCita);
+
 
     return new Response(JSON.stringify({ message: 'Cita creada exitosamente', newCita }), {
       status: 201,

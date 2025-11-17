@@ -12,6 +12,8 @@ import { filtrarCitas } from "./components/FilterSection";
 export default function ConsultasPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [nombre, setNombre] = useState("");
+  
   const [rol, setRol] = useState("externo");
 
   const [citas, setCitas] = useState<Cita[]>([
@@ -114,8 +116,16 @@ export default function ConsultasPage() {
   ]);
 
   useEffect(() => {
-    const rolUrl = searchParams.get("rol");
+    const rolUrl = sessionStorage.getItem("rol");
     const saved = localStorage.getItem("rol");
+    const savedName = sessionStorage.getItem("nombre");
+
+    if (!rolUrl) {
+      router.push("/login");
+    } else {
+      setRol(rolUrl);
+      setNombre(savedName || "");
+    }
     
     const actualizarRol = () => {
       if (rolUrl && rolUrl !== rol) {
@@ -150,6 +160,36 @@ export default function ConsultasPage() {
     isOpen: false,
     cita: null
   });
+  return (
+    <div className="min-h-screen flex font-poppins">
+      {/* Sidebar */}
+      <aside className={`${colorSidebar} text-white w-64 flex flex-col justify-between py-8 px-6`}>
+        <div>
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center text-2xl shadow-inner">
+              👤
+            </div>
+            <p className="mt-3 font-semibold text-lg text-white">
+              Hola! {nombre}
+            </p>
+          </div>
+          <nav className="flex flex-col gap-4">
+            {!isAdmin && (
+              <button
+                onClick={() => go("/Gestion/registro")}
+                className="text-left py-2 px-4 rounded-lg flex items-center gap-2 text-white hover:bg-white/20 transition-all"
+              >
+                <FiPlus className="w-5 h-5" /> Registrar cita
+              </button>
+            )}
+            <button
+              onClick={() => go("/Gestion/consultas")}
+              className="text-left py-2 px-4 rounded-lg flex items-center gap-2 bg-white/20 text-white font-medium"
+            >
+              <FiList className="w-5 h-5" /> Consultar cita
+            </button>
+          </nav>
+        </div>
 
   const [nuevaFechaHora, setNuevaFechaHora] = useState({
     fecha: "",

@@ -13,18 +13,13 @@ interface Usuario {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState("externo");
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
 
-  const isAdmin = role === "admin";
 
   // 🎨 Colores dinámicos según rol
-  const bgGradient = isAdmin
-    ? "from-[#5C4402] to-[#B9932C]"
-    : "from-[#0A1E6A] to-[#1E3A8A]";
-  const btnGradient = isAdmin
+  const btnGradient = false
     ? "from-[#D4AF37] to-[#FAD87A]"
     : "from-blue-500 to-cyan-400";
 
@@ -38,16 +33,30 @@ export default function LoginPage() {
         throw new Error("Por favor, completa todos los campos.");
       }
 
-      // 🔸 Aquí puedes integrar backend si lo deseas
-      // const res = await fetch("/api/login", {...});
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ correo, contrasena }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al iniciar sesión.");
+      }
 
       // ✅ Guardar el rol en localStorage
-      try {
-        localStorage.setItem("rol", role);
-      } catch {}
+        const rol = data.admin.esSuperadmin ? "superadmin" : "admin";
+        sessionStorage.setItem("rol", rol);
+        sessionStorage.setItem("nombre", data.admin.nombre);
+        sessionStorage.setItem("correo", data.admin.correo);
+        sessionStorage.setItem("id", data.admin.id_admin);
+        sessionStorage.setItem("area", data.admin.areaAdmin);
 
       // ✅ Redirigir correctamente a /Gestion (pantalla de bienvenida)
-      router.push(`/Gestion?rol=${role}`);
+      router.push(`/Gestion?rol=${rol}`);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -59,97 +68,64 @@ export default function LoginPage() {
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center bg-gradient-to-b ${bgGradient} p-6 font-poppins transition-all duration-500`}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-10 flex flex-col gap-6"
-      >
-        {/* 🔸 Logo */}
-        <div className="flex justify-center mb-4">
-          <div
-            className={`w-16 h-16 ${
-              isAdmin
-                ? "bg-gradient-to-br from-yellow-300 to-amber-400"
-                : "bg-gradient-to-br from-blue-400 to-cyan-300"
-            } rounded-2xl flex items-center justify-center`}
-          >
-            <div className="w-6 h-6 bg-white/90 rounded-full shadow-inner"></div>
-          </div>
-        </div>
-
-        {/* 🔸 Encabezado */}
-        <div className="text-center">
-          <h1 className="text-3xl font-semibold text-white mb-1">
-            Inicio de sesión
-          </h1>
-          <p className="text-blue-200 text-sm">
-            Ingresa tus credenciales para continuar
-          </p>
-        </div>
-
-        {/* 🔸 Formulario */}
-        <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-4">
-          <div className="flex flex-col">
-            <label className="text-sm text-blue-100 mb-1">
-              Correo electrónico
-            </label>
-            <input
-              type="email"
-              placeholder="tucorreo@ejemplo.com"
-              value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              className="px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-cyan-300"
-              required
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm text-blue-100 mb-1">Contraseña</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={contrasena}
-              onChange={(e) => setContrasena(e.target.value)}
-              className="px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-cyan-300"
-              required
-            />
-          </div>
-
-          {/* 🔸 Selector de rol */}
-          <div className="flex flex-col">
-            <label className="text-sm text-blue-100 mb-1">Rol</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white focus:outline-none focus:ring-2 focus:ring-cyan-300 appearance-none"
-            >
-              <option value="admin" className="text-black">
-                Guardia
-              </option>
-              <option value="externo" className="text-black">
-                Administrador Universitario
-              </option>
-            </select>
-          </div>
-
-          {/*  Mensaje de error */}
-          {error && (
-            <p className="text-red-300 text-sm text-center mt-2">{error}</p>
-          )}
-
-          {/*  Botón dinámico */}
-          <button
-            type="submit"
-            className={`mt-2 w-full py-3 rounded-xl bg-gradient-to-r ${btnGradient} text-white font-semibold shadow-md hover:shadow-lg transition-transform hover:brightness-110`}
-          >
-            Iniciar sesión
-          </button>
-        </form>
-
-      </motion.div>
+  className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-900 to-cyan-600 p-6 font-poppins transition-all duration-500"
+>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+    className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-10 flex flex-col gap-6 border border-white/20"
+  >
+    {/* Logo */}
+    <div className="flex justify-center mb-4">
+      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-inner">
+        <div className="w-6 h-6 bg-white/90 rounded-full"></div>
+      </div>
     </div>
-  );
+
+    {/* Encabezado */}
+    <div className="text-center">
+      <h1 className="text-3xl font-semibold text-white mb-1">Inicio de sesión</h1>
+      <p className="text-blue-200 text-sm">Ingresa tus credenciales para continuar</p>
+    </div>
+
+    {/* Formulario */}
+    <form onSubmit={handleLogin} className="flex flex-col gap-4 mt-4">
+      <div className="flex flex-col">
+        <label className="text-sm text-blue-100 mb-1">Correo electrónico</label>
+        <input
+          type="email"
+          placeholder="tucorreo@ejemplo.com"
+          value={correo}
+          onChange={(e) => setCorreo(e.target.value)}
+          className="px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-cyan-300 transition"
+          required
+        />
+      </div>
+
+      <div className="flex flex-col">
+        <label className="text-sm text-blue-100 mb-1">Contraseña</label>
+        <input
+          type="password"
+          placeholder="••••••••"
+          value={contrasena}
+          onChange={(e) => setContrasena(e.target.value)}
+          className="px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-cyan-300 transition"
+          required
+        />
+      </div>
+
+      {error && <p className="text-red-300 text-sm text-center mt-2">{error}</p>}
+
+      <button
+        type="submit"
+        className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-semibold shadow-md hover:shadow-lg hover:brightness-110 transition-all"
+      >
+        Iniciar sesión
+      </button>
+    </form>
+  </motion.div>
+</div>
+
+  )
 }
