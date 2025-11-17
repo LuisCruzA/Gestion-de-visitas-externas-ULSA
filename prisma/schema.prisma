@@ -41,18 +41,22 @@ model Vehiculo {
   id_vehiculo Int          @id @default(autoincrement())
   marca       String
   modelo      String
+  color       String       @default("N/A")
+  placas      String       @default("N/A")
   id_ingreso  Int          @unique
   ingreso     MedioIngreso @relation(fields: [id_ingreso], references: [id_ingreso])
 }
 
 model Cita {
-  id_cita     Int       @id @default(autoincrement())
-  estado      Estado    @default(Actual)
-  fecha       DateTime
-  adminId     Int
-  visitanteId Int
-  admin       Admin     @relation(fields: [adminId], references: [id_admin])
-  visitante   Visitante @relation(fields: [visitanteId], references: [id_visitante])
+  id_cita         Int       @id @default(autoincrement())
+  estado          Estado    @default(Actual)
+  fecha           DateTime
+  area            String?
+  personaVisitada String?
+  adminId         Int
+  visitanteId     Int
+  admin           Admin     @relation(fields: [adminId], references: [id_admin])
+  visitante       Visitante @relation(fields: [visitanteId], references: [id_visitante])
 }
 
 enum FormaIngreso {
