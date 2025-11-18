@@ -89,7 +89,7 @@ export default function ConsultasPage() {
         </div>
 
         <button
-          onClick={() => router.push("/login")}
+          onClick={() => {router.push("/login"); sessionStorage.clear();}}
           className="bg-white/20 text-white py-2 px-4 rounded-lg hover:bg-white/30 transition-all font-medium flex items-center gap-2 shadow-md"
         >
           <FiLogOut className="w-5 h-5" /> Salir
