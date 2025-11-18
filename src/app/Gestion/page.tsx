@@ -129,7 +129,7 @@ export default function BienvenidaPage() {
           </button>
 
           <button
-            onClick={() => handleAccion("salir")}
+            onClick={() => {router.push("/login"); sessionStorage.clear();}}
             className="flex-1 py-3 rounded-xl bg-white/20 border border-white/30 text-white font-semibold shadow-md hover:bg-white/30 hover:scale-[1.03] transition-transform"
           >
             Salir

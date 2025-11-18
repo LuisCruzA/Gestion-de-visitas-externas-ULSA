@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiLogOut, FiList, FiPlus } from "react-icons/fi";
 import { motion, AnimatePresence, } from "framer-motion";
 
+
 // Formulario y lógica del formulario
 interface FormData {
   nombre: string;
@@ -460,6 +461,8 @@ function FormularioDatosCita({ form, errores, handleChange, tocado }: FormProps)
 
 function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormProps) {
   return (
+
+    
     <motion.div
       key="paso3"
       initial={{ opacity: 0, x: -40 }}
@@ -547,7 +550,6 @@ function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormPro
   );
 }
 
-
 function Sidebar({
   rol,
   showHeader = false,
@@ -580,6 +582,10 @@ function Sidebar({
     const id = sessionStorage.getItem("id");
     if (id) {
       setIdAdmin(Number(id));
+      
+    }
+    if (!id) {
+      router.push("/login");
     }
     const savedName = sessionStorage.getItem("nombre");
     if (savedName) {
@@ -646,7 +652,7 @@ function Sidebar({
             {isAdmin ? "Panel de Guardia" : "Panel Universitario"}
           </h1>
           <button
-            onClick={() => router.push("/login")}
+            onClick={() => {router.push("/login"); sessionStorage.clear();}}
             className="px-4 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition text-white"
           >
             Cerrar sesión
@@ -723,7 +729,7 @@ function Sidebar({
         </div>
 
         <button
-          onClick={() => router.push("/login")}
+          onClick={() => {router.push("/login"); sessionStorage.clear();}}
           className="bg-white/20 text-white py-2 px-4 rounded-lg hover:bg-white/30 transition-all font-medium flex items-center gap-2"
         >
           <FiLogOut className="w-5 h-5" /> Salir
