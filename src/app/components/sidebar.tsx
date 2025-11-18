@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiLogOut, FiList, FiPlus } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, } from "framer-motion";
 
 
 // Formulario y lógica del formulario
@@ -15,11 +15,14 @@ interface FormData {
   nacimiento: string;
   telefono: string;
   fechaVisita: string;
-  personaVisita: string;
-  area: string;
+  personaVisita?: string;
+  area?: string;
   medioIngreso: string;
   marca: string;
   modelo: string;
+  placas?:string;
+  color?: string;
+  conoces?:string;
 }
 
 
@@ -54,6 +57,9 @@ export function useFormLogic() {
     medioIngreso: "",
     marca: "",
     modelo: "",
+    color:"",
+    placas:""
+
   });
   const [errores, setErrores] = useState<{[key: string]: string}>({});
   const [tocado, setTocado] = useState(false);
@@ -176,7 +182,9 @@ export function useFormLogic() {
       case 2:
         setForm(prev => ({
           ...prev,
-          fechaVisita: ""
+          fechaVisita: "",
+          personaVisita:"",
+          area:""
         }));
         break;
       case 3:
@@ -184,7 +192,9 @@ export function useFormLogic() {
           ...prev,
           medioIngreso: "",
           marca: "",
-          modelo: ""
+          modelo: "",
+          placas:"",
+          color:"",
         }));
         break;
     }
@@ -216,7 +226,9 @@ export function useFormLogic() {
             case 2:
               setForm(prev => ({
                 ...prev,
-                fechaVisita: datosActuales.fechaVisita
+                fechaVisita: datosActuales.fechaVisita,
+                area: datosActuales.area,
+                personaVisita: datosActuales.personaVisita
               }));
               break;
           }
@@ -249,7 +261,9 @@ export function useFormLogic() {
           case 2:
             setForm(prev => ({
               ...prev,
-              fechaVisita: datosActuales.fechaVisita
+              fechaVisita: datosActuales.fechaVisita,
+              area: datosActuales.area,
+                personaVisita: datosActuales.personaVisita
             }));
             break;
         }
@@ -271,6 +285,8 @@ export function useFormLogic() {
       medioIngreso: "",
       marca: "",
       modelo: "",
+      placas:"",
+      color:""
     });
     setErrores({});
     setTocado(false);
@@ -373,9 +389,75 @@ function FormularioDatosCita({ form, errores, handleChange, tocado }: FormProps)
           <span className="text-red-500 text-sm mt-1">{errores.fechaVisita}</span>
         )}
       </div>
+
+      {/* Pregunta si conoce el área o la persona a visitar */}
+      <div className="flex flex-col mt-10 items-center">
+        <label className="text-gray-600 mb-1">¿Conoces el área o la persona a visitar?</label>
+
+        <div className="flex items-center mb-2">
+          <input
+            type="radio"
+            id="areaConocida"
+            name="conoces"
+            value="si"
+            checked={form.conoces === "si"}
+            onChange={handleChange}
+            className="mr-2"
+          />
+          <label htmlFor="areaConocida" className="text-gray-600">Sí</label>
+
+          <input
+            type="radio"
+            id="areaNoConocida"
+            name="conoces"
+            value="no"
+            checked={form.conoces === "no"}
+            onChange={handleChange}
+            className="ml-4 mr-2"
+          />
+          <label htmlFor="areaNoConocida" className="text-gray-600">No</label>
+        </div>
+      </div>
+
+      {/* Si "Sí" es seleccionado, mostramos los campos adicionales */}
+      {form.conoces === "si" && (
+        <>
+          <div className="flex flex-col">
+            <label className="text-gray-600 mb-1">Área</label>
+            <input
+              name="area"
+              value={form.area || ""}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              
+            </input>
+            {tocado && errores.area && (
+              <span className="text-red-500 text-sm mt-1">{errores.area}</span>
+            )}
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-gray-600 mb-1">Persona a visitar</label>
+            <input
+              type="text"
+              name="personaVisita"
+              value={form.personaVisita}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {tocado && errores.personaVisita && (
+              <span className="text-red-500 text-sm mt-1">{errores.personaVisita}</span>
+            )}
+          </div>
+        </>
+      )}
+
     </motion.div>
   );
 }
+
+
 
 function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormProps) {
   return (
@@ -435,6 +517,32 @@ function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormPro
                 <span className="text-red-500 text-sm mt-1">{errores.modelo}</span>
               )}
             </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-1">Placas del vehículo</label>
+              <input
+                type="text"
+                name="placas"
+                value={form.placas}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              {tocado && errores.placas && (
+                <span className="text-red-500 text-sm mt-1">{errores.placas}</span>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <label className="text-gray-600 mb-1">Color del vehículo</label>
+              <input
+                type="text"
+                name="color"
+                value={form.color}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              {tocado && errores.color && (
+                <span className="text-red-500 text-sm mt-1">{errores.color}</span>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -486,6 +594,8 @@ function Sidebar({
   }, []);
 
   const enviarCita = async () => {
+    console.log("Estado de form antes de enviar:", form);
+
     const data = {
       fecha: form.fechaVisita,
       adminId: idAdmin,
@@ -497,14 +607,22 @@ function Sidebar({
         correo: form.correo,
         celular: form.telefono,
       },
+      cita: {
+        area: form.area,  // 'area' va aquí directamente
+        personaVisitada: form.personaVisita
+      },
       medioIngreso: {
         forma_ingreso: form.medioIngreso,
+        
       },
       vehiculo: form.medioIngreso === "CARRO" ? {
         marca: form.marca,
         modelo: form.modelo,
+        placas:form.placas,
+        color:form.color
       } : null,
     };
+    console.log("Datos a enviar:", data); // Aquí verifica que `area` esté en `data`
 
     try {
       const response = await fetch("/api/sistema/postCita", {
