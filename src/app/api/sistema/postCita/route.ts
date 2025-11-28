@@ -10,6 +10,7 @@ export async function POST(req: Request) {
     const { fecha, adminId, visitante, medioIngreso, vehiculo,cita } = body;
     const fechaobj = new Date(fecha); // Mantener la hora local del frontend
 
+    fechaobj.setHours(fechaobj.getHours()-6)
     const inicio = new Date(fechaobj);
     const fin = new Date(fechaobj);
     fin.setHours(inicio.getHours() + .5);

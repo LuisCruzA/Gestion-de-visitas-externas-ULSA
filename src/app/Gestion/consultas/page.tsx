@@ -1,8 +1,7 @@
-"use client";
-
-import React, { useState, useEffect, useMemo } from "react";
+'use client'
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiDownload } from 'react-icons/fi';
+import { FiDownload } from "react-icons/fi";
 import Sidebar from "./components/Sidebar";
 import FilterSection from "./components/FilterSection";
 import CitasTable, { Cita } from "./components/CitasTable";
@@ -12,140 +11,58 @@ import { filtrarCitas } from "./components/FilterSection";
 export default function ConsultasPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [nombre, setNombre] = useState("");
-  
   const [rol, setRol] = useState("externo");
 
-  const [citas, setCitas] = useState<Cita[]>([
-    {
-      id: 1,
-      fecha: "2025-11-10 10:00",
-      visitante: "Juan Pérez García",
-      correo: "juan.perez@example.com",
-      telefono: "5551234567",
-      medioIngreso: "Vehículo",
-      genero: "Masculino",
-      estado: "Finalizada",
-      area: "Servicios Escolares",
-      placas: "ABC-123",
-      modelo: "Toyota Corolla 2020"
-    },
-    {
-      id: 2,
-      fecha: "2025-11-15 14:30",
-      visitante: "María López Hernández",
-      correo: "maria.lopez@example.com",
-      telefono: "5559876543",
-      medioIngreso: "A pie",
-      genero: "Femenino",
-      estado: "Activa",
-      area: "Deportes"
-    },
-    {
-      id: 3,
-      fecha: "2025-11-18 09:00",
-      visitante: "Carlos Ramírez Torres",
-      correo: "carlos.ramirez@example.com",
-      telefono: "5551112233",
-      medioIngreso: "Vehículo",
-      genero: "Masculino",
-      estado: "Activa",
-      area: "Talleres",
-      placas: "XYZ-789",
-      modelo: "Honda Civic 2019"
-    },
-    {
-      id: 4,
-      fecha: "2025-11-11 15:00",
-      visitante: "Ana Martínez Sánchez",
-      correo: "ana.martinez@example.com",
-      telefono: "5554445566",
-      medioIngreso: "A pie",
-      genero: "Femenino",
-      estado: "Finalizada",
-      area: "Coordinación"
-    },
-    {
-      id: 5,
-      fecha: "2025-11-09 11:30",
-      visitante: "Luis González Pérez",
-      correo: "luis.gonzalez@example.com",
-      telefono: "5557778899",
-      medioIngreso: "Vehículo",
-      genero: "Masculino",
-      estado: "Finalizada",
-      area: "Deportes",
-      placas: "DEF-456",
-      modelo: "Nissan Sentra 2021"
-    },
-    {
-      id: 6,
-      fecha: "2025-11-20 16:00",
-      visitante: "Patricia Hernández López",
-      correo: "patricia.hernandez@example.com",
-      telefono: "5552223344",
-      medioIngreso: "A pie",
-      genero: "Femenino",
-      estado: "Activa",
-      area: "Formación de la Fe"
-    },
-    {
-      id: 7,
-      fecha: "2025-11-25 08:30",
-      visitante: "Roberto Silva Gómez",
-      correo: "roberto.silva@example.com",
-      telefono: "5556667788",
-      medioIngreso: "Vehículo",
-      genero: "Masculino",
-      estado: "Activa",
-      area: "Servicios Escolares",
-      placas: "GHI-321",
-      modelo: "Mazda 3 2022"
-    },
-    {
-      id: 8,
-      fecha: "2025-11-08 13:00",
-      visitante: "Sofía Morales Castro",
-      correo: "sofia.morales@example.com",
-      telefono: "5559990011",
-      medioIngreso: "A pie",
-      genero: "Femenino",
-      estado: "Finalizada",
-      area: "Dirección Académica"
-    }
-  ]);
+  const [citas, setCitas] = useState<Cita[]>([]);
+
+  const [adminId, setAdminId] = useState<string | null>(null);
 
   useEffect(() => {
-    const rolUrl = sessionStorage.getItem("rol");
-    const saved = localStorage.getItem("rol");
-    const savedName = sessionStorage.getItem("nombre");
-
-    if (!rolUrl) {
-      router.push("/login");
-    } else {
-      setRol(rolUrl);
-      setNombre(savedName || "");
-    }
-    
-    const actualizarRol = () => {
-      if (rolUrl && rolUrl !== rol) {
-        setRol(rolUrl);
-        try {
-          localStorage.setItem("rol", rolUrl);
-        } catch {}
-      } else if (!rolUrl && saved && saved !== rol) {
-        setRol(saved);
+    // Verifica si estamos en el entorno del cliente
+    if (typeof window !== "undefined") {
+      // Accede a sessionStorage solo en el cliente
+      const id = sessionStorage.getItem("id");
+      if (id) {
+        setAdminId(id); // Establece el adminId desde sessionStorage
       }
-    };
+    }
+  }, []);
 
-    setTimeout(actualizarRol, 0);
-  }, [searchParams, rol]);
+  // Definir la función fetchCitas aquí
+  const fetchCitas = async (adminId: string) => {
+    try {
+      const response = await fetch("/api/getCitas", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "adminId": adminId, // Pasar el adminId en los headers
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCitas(data); // Establecer las citas en el estado
+      } else {
+        console.error("Error al obtener citas:", data.error);
+      }
+    } catch (error) {
+      console.error("Error en la solicitud:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (adminId) {
+      // Realizar la solicitud para obtener las citas filtradas por adminId
+      fetchCitas(adminId);
+    }
+  }, [adminId]);
 
   const isAdmin = rol === "admin";
   const colorSidebar = isAdmin ? "bg-[#916A00] text-white" : "bg-[#0A1E6A] text-white";
   const colorBtn = isAdmin ? "bg-[#A67C00] text-white" : "bg-[#0A1E6A] text-white";
   const colorHeader = isAdmin ? 'bg-[#A67C00]' : 'bg-[#0A1E6A]';
-  
+
   const go = (path: string) => router.push(`${path}?rol=${rol}`);
 
   const [filtros, setFiltros] = useState({
@@ -155,128 +72,6 @@ export default function ConsultasPage() {
     estado: "",
     visitante: ""
   });
-
-  const [modalReagendar, setModalReagendar] = useState<{ isOpen: boolean; cita: Cita | null }>({
-    isOpen: false,
-    cita: null
-  });
-  return (
-    <div className="min-h-screen flex font-poppins">
-      {/* Sidebar */}
-      <aside className={`${colorSidebar} text-white w-64 flex flex-col justify-between py-8 px-6`}>
-        <div>
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center text-2xl shadow-inner">
-              👤
-            </div>
-            <p className="mt-3 font-semibold text-lg text-white">
-              Hola! {nombre}
-            </p>
-          </div>
-          <nav className="flex flex-col gap-4">
-            {!isAdmin && (
-              <button
-                onClick={() => go("/Gestion/registro")}
-                className="text-left py-2 px-4 rounded-lg flex items-center gap-2 text-white hover:bg-white/20 transition-all"
-              >
-                <FiPlus className="w-5 h-5" /> Registrar cita
-              </button>
-            )}
-            <button
-              onClick={() => go("/Gestion/consultas")}
-              className="text-left py-2 px-4 rounded-lg flex items-center gap-2 bg-white/20 text-white font-medium"
-            >
-              <FiList className="w-5 h-5" /> Consultar cita
-            </button>
-          </nav>
-        </div>
-
-        <button
-          onClick={() => {router.push("/login"); sessionStorage.clear();}}
-          className="bg-white/20 text-white py-2 px-4 rounded-lg hover:bg-white/30 transition-all font-medium flex items-center gap-2 shadow-md"
-        >
-          <FiLogOut className="w-5 h-5" /> Salir
-        </button>
-      </aside>
-  const [nuevaFechaHora, setNuevaFechaHora] = useState({
-    fecha: "",
-    hora: ""
-  });
-
-  const [errorReagendamiento, setErrorReagendamiento] = useState<string>("");
-
-  const abrirModalReagendar = (cita: Cita) => {
-    setModalReagendar({ isOpen: true, cita });
-    const hoy = new Date();
-    const fechaHoy = hoy.toISOString().split('T')[0];
-    const [, hora] = cita.fecha.split(" ");
-    setNuevaFechaHora({ fecha: fechaHoy, hora });
-    setErrorReagendamiento("");
-  };
-
-  const cerrarModalReagendar = () => {
-    setModalReagendar({ isOpen: false, cita: null });
-    setNuevaFechaHora({ fecha: "", hora: "" });
-    setErrorReagendamiento("");
-  };
-
-  const validarReagendamiento = (): string | null => {
-    const { fecha, hora } = nuevaFechaHora;
-
-    if (!fecha || !hora) {
-      return "Debe seleccionar fecha y hora";
-    }
-
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const fechaSeleccionada = new Date(fecha);
-    fechaSeleccionada.setHours(0, 0, 0, 0);
-    
-    if (fechaSeleccionada < hoy) {
-      return "No se puede reagendar en una fecha pasada";
-    }
-
-    const diaSemana = fechaSeleccionada.getDay();
-    if (diaSemana === 0) {
-      return "No se pueden reagendar citas los domingos";
-    }
-
-    const [horas] = hora.split(":").map(Number);
-    if (horas < 7 || horas >= 21) {
-      return "El horario debe estar entre 7:00 AM y 9:00 PM";
-    }
-
-    const fechaHoraCompleta = `${fecha} ${hora}`;
-    const citaSolapada = citas.find(
-      (c) => c.fecha === fechaHoraCompleta && c.id !== modalReagendar.cita?.id
-    );
-
-    if (citaSolapada) {
-      return "Ya existe una cita programada en esta fecha y hora";
-    }
-
-    return null;
-  };
-
-  const guardarReagendamiento = () => {
-    const error = validarReagendamiento();
-    
-    if (error) {
-      setErrorReagendamiento(error);
-      return;
-    }
-
-    // TODO: Implementar lógica para guardar el reagendamiento en la base de datos
-    console.log("Reagendar cita:", modalReagendar.cita?.id, nuevaFechaHora);
-    
-    setCitas(citas.map(c => 
-      c.id === modalReagendar.cita?.id 
-        ? { ...c, fecha: `${nuevaFechaHora.fecha} ${nuevaFechaHora.hora}` }
-        : c
-    ));
-    
-    cerrarModalReagendar();
-  };
 
   // Usar useMemo para calcular las citas filtradas
   const citasFiltradas = useMemo(() => {
@@ -298,12 +93,12 @@ export default function ConsultasPage() {
             <h2 className={`text-3xl font-bold ${isAdmin ? "text-[#A67C00]" : "text-[#0A1E6A]"}`}>
               Consultar Citas
             </h2>
-            <button
+            {/* <button
               onClick={() => {}}
               className={`${colorBtn} px-5 py-2.5 rounded-lg hover:opacity-90 transition font-semibold flex items-center gap-2 shadow-md`}
             >
               <FiDownload className="w-5 h-5" /> Descargar PDF
-            </button>
+            </button> */}
           </div>
 
           <FilterSection
@@ -316,21 +111,21 @@ export default function ConsultasPage() {
             citas={citasFiltradas}
             isAdmin={isAdmin}
             colorHeader={colorHeader}
-            onReagendar={abrirModalReagendar}
+            onReagendar={() => {}}
           />
         </div>
       </main>
 
       <ReagendarModal
-        isOpen={modalReagendar.isOpen}
-        cita={modalReagendar.cita}
-        nuevaFechaHora={nuevaFechaHora}
-        error={errorReagendamiento}
+        isOpen={false}
+        cita={null}
+        nuevaFechaHora={{ fecha: "", hora: "" }}
+        error=""
         colorBtn={colorBtn}
-        onClose={cerrarModalReagendar}
-        onSave={guardarReagendamiento}
-        onFechaChange={(fecha) => setNuevaFechaHora({ ...nuevaFechaHora, fecha })}
-        onHoraChange={(hora) => setNuevaFechaHora({ ...nuevaFechaHora, hora })}
+        onClose={() => {}}
+        onSave={() => {}}
+        onFechaChange={() => {}}
+        onHoraChange={() => {}}
       />
     </div>
   );

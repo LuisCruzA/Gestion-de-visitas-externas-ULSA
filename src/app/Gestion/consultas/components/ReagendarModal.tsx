@@ -40,8 +40,9 @@ export default function ReagendarModal({
         </div>
 
         <div className="mb-4">
+          {/* Información del visitante */}
           <p className="text-sm text-gray-600 mb-2">
-            <strong>Visitante:</strong> {cita?.visitante}
+            <strong>Visitante:</strong> {cita?.visitante.nombre}
           </p>
           <p className="text-sm text-gray-600 mb-3">
             <strong>Fecha actual:</strong> {cita?.fecha}
