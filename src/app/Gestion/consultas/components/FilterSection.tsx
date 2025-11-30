@@ -19,22 +19,34 @@ interface FilterSectionProps {
 export const filtrarCitas = (citas: Cita[], filtros: Filtros): Cita[] => {
   return citas.filter(cita => {
     // Filtro por visitante (búsqueda por texto)
-    if (filtros.visitante && !cita.visitante.toLowerCase().includes(filtros.visitante.toLowerCase())) {
+    if (filtros.visitante && !cita.visitante.nombre.toLowerCase().includes(filtros.visitante.toLowerCase())) {
       return false;
     }
 
-    // Filtro por fecha y hora
-    if (filtros.fechaHora) {
-      // Convertir el formato de datetime-local (YYYY-MM-DDTHH:mm) al formato de la cita (YYYY-MM-DD HH:mm)
-      const fechaHoraFiltro = filtros.fechaHora.replace('T', ' ');
-      if (cita.fecha !== fechaHoraFiltro) {
-        return false;
-      }
-    }
+   // Filtro por fecha (solo día, ignorar hora)
+// Filtro por fecha (solo día)
+if (filtros.fechaHora) {
+
+  const fechaFiltro = filtros.fechaHora; // YYYY-MM-DD
+  
+  const fechaCita =
+    cita.fecha.includes("T")
+      ? cita.fecha.split("T")[0]
+      : cita.fecha.split(" ")[0];
+
+  if (fechaCita !== fechaFiltro) {
+    return false;
+  }
+}
+
+
 
     // Filtro por medio de ingreso
-    if (filtros.medioIngreso && cita.medioIngreso !== filtros.medioIngreso) {
-      return false;
+    if (filtros.medioIngreso) {
+      const medio = cita.visitante.medioIngresos[0]?.forma_ingreso || "";
+      if (medio !== filtros.medioIngreso) {
+        return false;
+      }
     }
 
     // Filtro por estado
@@ -77,7 +89,7 @@ export default function FilterSection({ isAdmin, filtros, onFiltrosChange }: Fil
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-600 mb-2">Fecha y hora</label>
           <input
-            type="datetime-local"
+            type="date"
             className="px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
             value={filtros.fechaHora}
             onChange={(e) => handleChange('fechaHora', e.target.value)}
@@ -91,8 +103,8 @@ export default function FilterSection({ isAdmin, filtros, onFiltrosChange }: Fil
             onChange={(e) => handleChange('medioIngreso', e.target.value)}
           >
               <option value="">Todos</option>
-              <option value="Vehículo">Vehículo</option>
-              <option value="A pie">A pie</option>
+              <option value="CARRO">Vehiculo</option>
+              <option value="PIE">A pie</option>
           </select>
         </div>
         {isAdmin && (
@@ -121,8 +133,8 @@ export default function FilterSection({ isAdmin, filtros, onFiltrosChange }: Fil
             onChange={(e) => handleChange('estado', e.target.value)}
           >
             <option value="">Todas</option>
-            <option value="Activa">Activa</option>
-            <option value="Finalizada">Finalizada</option>
+            <option value="Actual">Actual</option>
+            <option value="Expirado">Expirado</option>
           </select>
         </div>
       </div>
