@@ -2,6 +2,7 @@ import { FiCalendar, FiX, FiEye } from 'react-icons/fi';
 import ReagendarModal from './ReagendarModal';
 import { useState } from 'react';
 import DetallesModal from './DetallesModal';
+import Swal from 'sweetalert2';
 
 export interface Cita {
   id_cita: number;
@@ -44,6 +45,7 @@ export default function CitasTable({
   // Estado para el modal
   const [isOpen, setOpen] = useState(false);
   const [isDetallesOpen, setDetallesOpen] = useState(false); // Estado para abrir el modal de detalles
+  const [isCancelOpen, setCancelOpen] = useState(false);
 
   const [citaSeleccionada, setCitaSeleccionada] = useState<Cita | null>(null);
   const [nuevaFechaHora, setNuevaFechaHora] = useState({ fecha: '', hora: '' });
@@ -86,6 +88,27 @@ export default function CitasTable({
   const handleCloseDetallesModal = () => {
     setDetallesOpen(false);
   };
+
+  const handleCancelCita = (cita: Cita) => {
+    setCitaSeleccionada(cita);
+
+    // SweetAlert2 para confirmar la cancelación
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "¡Esta acción no se puede deshacer!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar cita',
+      cancelButtonText: 'No, mantener cita',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Aquí puedes implementar la lógica para cancelar la cita
+        Swal.fire('Cita cancelada', 'La cita ha sido cancelada correctamente.', 'success');
+      }
+    });
+  };
+
+
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -244,7 +267,7 @@ export default function CitasTable({
 
                         {/* Botón para Cancelar */}
                         <button
-                          onClick={() => {/* Aquí puedes implementar la función para cancelar la cita */}}
+                          onClick={() => handleCancelCita(cita)} // Abre SweetAlert2 para cancelar
                           className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-2 font-medium text-sm shadow-sm ml-2"
                           title="Cancelar cita"
                         >
@@ -277,6 +300,8 @@ export default function CitasTable({
           onClose={handleCloseDetallesModal}
         />
       )}
+
+
     </div>
   );
 }
