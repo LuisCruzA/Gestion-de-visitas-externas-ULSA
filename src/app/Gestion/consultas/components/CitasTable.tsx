@@ -31,6 +31,7 @@ export interface Cita {
 
 interface CitasTableProps {
   citas: Cita[];
+  setCitas: React.Dispatch<React.SetStateAction<Cita[]>>;
   isAdmin: boolean;
   colorHeader: string;
   onReagendar: (cita: Cita) => void;
@@ -38,6 +39,7 @@ interface CitasTableProps {
 
 export default function CitasTable({
   citas,
+  setCitas,
   isAdmin,
   colorHeader,
   onReagendar,
@@ -89,24 +91,70 @@ export default function CitasTable({
     setDetallesOpen(false);
   };
 
-  const handleCancelCita = (cita: Cita) => {
+  const handleCancelCita = async (cita: Cita) => {
     setCitaSeleccionada(cita);
-
-    // SweetAlert2 para confirmar la cancelación
+  
     Swal.fire({
       title: '¿Estás seguro?',
-      text: "¡Esta acción no se puede deshacer!",
+      text: 'Esta acción eliminará la cita por completo.',
       icon: 'warning',
       showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
       confirmButtonText: 'Sí, cancelar cita',
-      cancelButtonText: 'No, mantener cita',
-    }).then((result) => {
+      cancelButtonText: 'No, mantener',
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        // Aquí puedes implementar la lógica para cancelar la cita
-        Swal.fire('Cita cancelada', 'La cita ha sido cancelada correctamente.', 'success');
+  
+        try {
+          // Llamada a la API DELETE
+          const resp = await fetch(`/api/citas/${cita.id_cita}`, {
+            method: "DELETE",
+          });
+  
+          const data = await resp.json();
+  
+          if (!resp.ok) {
+            return Swal.fire(
+              'Error',
+              data.error || 'No se pudo cancelar la cita.',
+              'error'
+            );
+          }
+  
+          Swal.fire(
+            'Cita cancelada',
+            'La cita ha sido eliminada correctamente.',
+            'success'
+          );
+
+          
+          setCitas(prev => prev.filter(c => c.id_cita !== cita.id_cita));
+
+          // Aquí puedes actualizar tu lista de citas
+          // si tienes un useEffect o reload:
+          // fetchCitas();
+          // o:
+          // Promise.all(
+          //   [
+          //     window.location.reload(),
+
+          //   ]
+          // )
+
+  
+        } catch (error) {
+          console.error(error);
+          Swal.fire(
+            'Error',
+            'Ocurrió un error al cancelar la cita.',
+            'error'
+          );
+        }
       }
     });
   };
+  
 
 
 
@@ -215,10 +263,10 @@ export default function CitasTable({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      cita.estado === 'Activa'
-                        ? 'bg-blue-100 text-blue-800'
-                        : cita.estado === 'Finalizada'
-                        ? 'bg-green-100 text-green-800'
+                      cita.estado === 'Actual'
+                        ? 'bg-blue-100 text-green-800'
+                        : cita.estado === 'Expirado'
+                        ? 'bg-red-100 text-red-800'
                         : 'bg-red-100 text-red-800'
                     }`}
                   >
@@ -228,7 +276,7 @@ export default function CitasTable({
 
                 {!isAdmin && (
                   <td className="flex flex-col gap-2 px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {cita.estado === 'Actual' ? (
+                    {cita.estado === 'Actual' || 'Expirado'? (
                       <>
                         {/* Botón para Reagendar */}
                         <button
@@ -265,15 +313,16 @@ export default function CitasTable({
                           Ver Detalles
                         </button>
 
-                        {/* Botón para Cancelar */}
-                        <button
-                          onClick={() => handleCancelCita(cita)} // Abre SweetAlert2 para cancelar
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-2 font-medium text-sm shadow-sm ml-2"
-                          title="Cancelar cita"
-                        >
-                          <FiX className="w-4 h-4" />
-                          Cancelar
-                        </button>
+                      {/* Botón para Cancelar */}
+<button
+  onClick={() => handleCancelCita(cita)} // Ya conectado con la API
+  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-2 font-medium text-sm shadow-sm ml-2"
+  title="Cancelar cita"
+>
+  <FiX className="w-4 h-4" />
+  Cancelar
+</button>
+
                       </>
                     ) : (
                       <span className="text-gray-400 text-sm italic">—</span>

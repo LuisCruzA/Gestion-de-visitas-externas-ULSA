@@ -17,6 +17,7 @@ export default function ConsultasPage() {
 
   const [adminId, setAdminId] = useState<string | null>(null);
 
+  
   useEffect(() => {
     // Verifica si estamos en el entorno del cliente
     if (typeof window !== "undefined") {
@@ -50,6 +51,17 @@ export default function ConsultasPage() {
       console.error("Error en la solicitud:", error);
     }
   };
+  // 🔄 Auto-refresh cada 30 segundos
+useEffect(() => {
+  if (!adminId) return;
+
+  const interval = setInterval(() => {
+    fetchCitas(adminId); // vuelve a pedir al backend
+  }, 30000); // 30 segundos
+
+  return () => clearInterval(interval); // limpiar
+}, [adminId]);
+
 
   useEffect(() => {
     if (adminId) {
@@ -109,6 +121,7 @@ export default function ConsultasPage() {
 
           <CitasTable
             citas={citasFiltradas}
+            setCitas={setCitas}
             isAdmin={isAdmin}
             colorHeader={colorHeader}
             onReagendar={() => {}}

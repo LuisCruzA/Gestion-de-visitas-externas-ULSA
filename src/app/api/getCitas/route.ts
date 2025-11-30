@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     }
 
     // Filtrar las citas por adminId
-    const citas = await prisma.cita.findMany({
+    let citas = await prisma.cita.findMany({
       where: {
         adminId: Number(adminId), // Filtrar las citas solo para el admin logueado
       },
@@ -29,8 +29,50 @@ export async function GET(req: Request) {
           },
         },
       },
+      orderBy: {
+        fecha: "asc",
+      }
     });
 
+     // Determinar cuáles ya expiraron
+     const ahora = new Date();
+     const expiradasIds = citas
+       .filter(c => c.estado === "Actual" && new Date(c.fecha) < ahora)
+       .map(c => c.id_cita);
+ 
+     // Actualizar estado a "Expirado" en lote
+     if (expiradasIds.length > 0) {
+       await prisma.cita.updateMany({
+         where: {
+           id_cita: { in: expiradasIds }
+         },
+         data: {
+           estado: "Expirado"
+         }
+       });
+ 
+       //  Volver a consultar las citas ya actualizadas
+       citas = await prisma.cita.findMany({
+         where: {
+           adminId: Number(adminId),
+         },
+         include: {
+           visitante: {
+             include: {
+               medioIngresos: {
+                 include: {
+                   vehiculo: true,
+                 },
+               },
+             },
+           },
+         },
+         orderBy: {
+           fecha: "asc",
+         }
+       });
+     }
+ 
  
     console.log(citas)
     return new Response(JSON.stringify(citas, ), {

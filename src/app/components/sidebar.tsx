@@ -132,7 +132,7 @@ export function useFormLogic() {
         // Solo ejecutar si no hay errores hasta este punto
         if (Object.keys(nuevosErrores).length === 0) {
           // Esta validación será asíncrona
-          return fetch(`/api/citas?fecha=${fecha.toISOString().split("T")[0]}&adminId=${idAdmin}`)
+          return fetch(`/api/citas/list?fecha=${fecha.toISOString().split("T")[0]}&adminId=${idAdmin}`)
             .then(res => res.json())
             .then((citas: { fecha: string }[]) => {
               const conflicto = citas.some(c => {
