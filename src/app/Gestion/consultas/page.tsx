@@ -62,6 +62,11 @@ useEffect(() => {
   return () => clearInterval(interval); // limpiar
 }, [adminId]);
 
+const handleReagendarSuccess = () => {
+  if (adminId) {
+    fetchCitas(adminId);
+  }
+};
 
   useEffect(() => {
     if (adminId) {
@@ -124,7 +129,7 @@ useEffect(() => {
             setCitas={setCitas}
             isAdmin={isAdmin}
             colorHeader={colorHeader}
-            onReagendar={() => {}}
+            onReagendar={handleReagendarSuccess}
           />
         </div>
       </main>

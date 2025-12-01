@@ -62,19 +62,59 @@ export default function CitasTable({
     setNuevaFechaHora((prev) => ({ ...prev, hora }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!nuevaFechaHora.fecha || !nuevaFechaHora.hora) {
-      setError('Por favor, selecciona una fecha y hora válidas.');
+      setError("Selecciona fecha y hora válidas");
       return;
     }
-    setError('');
-    // Aquí agregar la lógica para guardar los cambios
-    setOpen(false); // Cerrar el modal después de guardar
+  
+    if (!citaSeleccionada) return;
+
+    try {
+      const resp = await fetch(`/api/citas/${citaSeleccionada?.id_cita}/reagendar`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fecha: nuevaFechaHora.fecha,
+          hora: nuevaFechaHora.hora
+        }),
+      });
+  
+      const data = await resp.json();
+  
+      if (!resp.ok) {
+        setError(data.error || "No se pudo reagendar");
+        return;
+      }
+  
+      Swal.fire({
+        icon: "success",
+        title: "Cita reagendada",
+        text: "La cita se actualizó correctamente.",
+      });
+  
+      setOpen(false);
+      setError("");
+  
+      // REFRESCAR la pantalla
+      // setCitas(prev => prev.filter(c => c.id_cita !== cita.id_cita));
+      onReagendar(citaSeleccionada);
+  
+    } catch (err) {
+      console.error(err);
+      setError("Error al guardar los cambios");
+    }
   };
+  
 
   const handleOpenModal = (cita: Cita) => {
     setCitaSeleccionada(cita);
-    setNuevaFechaHora({ fecha: cita.fecha, hora: '12:00' }); // Valor por defecto
+    const [soloFecha, soloHora] = cita.fecha.split(" ");
+
+    setNuevaFechaHora({
+      fecha: soloFecha, 
+      hora: soloHora?.slice(0,5) || "12:00"
+    });
     setOpen(true);
   };
 

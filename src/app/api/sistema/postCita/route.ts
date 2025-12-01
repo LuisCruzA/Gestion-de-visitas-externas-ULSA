@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     fechaobj.setHours(fechaobj.getHours()-6)
     const inicio = new Date(fechaobj);
     const fin = new Date(fechaobj);
-    fin.setHours(inicio.getHours() + .5);
+    fin.setMinutes(inicio.getMinutes() + 30);
 
     // Verificar si el admin ya tiene una cita en ese horario
     const citaExistente = await prisma.cita.findFirst({

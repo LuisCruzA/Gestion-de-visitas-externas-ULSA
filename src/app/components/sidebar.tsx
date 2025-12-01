@@ -121,12 +121,19 @@ export function useFormLogic() {
         const dia = fecha.getDay();
         const hora = fecha.getHours();
         const minutos = fecha.getMinutes();
+        const arr:number[] = [1,2,3,4,5];
 
         if (dia === 0) {
           nuevosErrores.fechaVisita = "No se pueden agendar citas en domingo.";
         } else if (dia === 6 && (hora > 16 || (hora === 16 && minutos > 0))) {
           nuevosErrores.fechaVisita = "Los sábados solo se pueden agendar citas hasta las 4:00 PM.";
         }
+        else if(arr.includes(dia) && (hora >20 ||(hora === 20 && minutos> 0)) || (hora < 8 || (hora===8 && minutos < 0)))
+          {
+            nuevosErrores.fechaVisita = "Escoge una hora valida entre las 8 am y 8 pm";
+
+        }
+
 
         // 🕒 Verificar disponibilidad de horario
         // Solo ejecutar si no hay errores hasta este punto
