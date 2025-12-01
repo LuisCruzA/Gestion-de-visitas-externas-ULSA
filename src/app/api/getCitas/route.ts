@@ -13,8 +13,25 @@ export async function GET(req: Request) {
       );
     }
 
+      let citas;
+    if (adminId === "4"){
+       citas = await prisma.cita.findMany({
+        include:{
+          visitante:{
+            include:{
+              medioIngresos:{
+                include:{
+                  vehiculo:true,
+                }
+              }
+            }
+          }
+        }
+       });
+    }else{
+
     // Filtrar las citas por adminId
-    let citas = await prisma.cita.findMany({
+       citas = await prisma.cita.findMany({
       where: {
         adminId: Number(adminId), // Filtrar las citas solo para el admin logueado
       },
@@ -33,7 +50,7 @@ export async function GET(req: Request) {
         fecha: "asc",
       }
     });
-
+}
      // Determinar cuáles ya expiraron
      const ahora = new Date();
      const expiradasIds = citas
@@ -50,7 +67,25 @@ export async function GET(req: Request) {
            estado: "Expirado"
          }
        });
- 
+
+
+       if (adminId === "4"){
+        citas = await prisma.cita.findMany({
+          include:{
+            visitante:{
+              include:{
+                medioIngresos:{
+                  include:{
+                    vehiculo:true,
+                  }
+                }
+              }
+            }
+          }
+         });;
+       }else{
+
+       
        //  Volver a consultar las citas ya actualizadas
        citas = await prisma.cita.findMany({
          where: {
@@ -72,7 +107,7 @@ export async function GET(req: Request) {
          }
        });
      }
- 
+    }
  
     console.log(citas)
     return new Response(JSON.stringify(citas, ), {
