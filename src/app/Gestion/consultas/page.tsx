@@ -11,7 +11,8 @@ import { filtrarCitas } from "./components/FilterSection";
 export default function ConsultasPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [rol, setRol] = useState("externo");
+  const [rol, setRol] = useState("");
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const [citas, setCitas] = useState<Cita[]>([]);
 
@@ -20,6 +21,7 @@ export default function ConsultasPage() {
   
   useEffect(() => {
     // Verifica si estamos en el entorno del cliente
+    const isAdmin = sessionStorage.getItem("isAdmin") === "true";
     if (typeof window !== "undefined") {
       // Accede a sessionStorage solo en el cliente
       const id = sessionStorage.getItem("id");
@@ -27,6 +29,7 @@ export default function ConsultasPage() {
         setAdminId(id); // Establece el adminId desde sessionStorage
       }
     }
+    setIsAdmin(isAdmin);
   }, []);
 
   // Definir la función fetchCitas aquí
@@ -67,20 +70,11 @@ const handleReagendarSuccess = () => {
     fetchCitas(adminId);
   }
 };
+  const colorSidebar = !isAdmin ? "bg-[#916A00] text-white" : "bg-[#0A1E6A] text-white";
+  const colorBtn = !isAdmin ? "bg-[#A67C00] text-white" : "bg-[#0A1E6A] text-white";
+  const colorHeader = !isAdmin ? 'bg-[#A67C00]' : 'bg-[#0A1E6A]';
 
-  useEffect(() => {
-    if (adminId) {
-      // Realizar la solicitud para obtener las citas filtradas por adminId
-      fetchCitas(adminId);
-    }
-  }, [adminId]);
-
-  const isAdmin = rol === "admin";
-  const colorSidebar = isAdmin ? "bg-[#916A00] text-white" : "bg-[#0A1E6A] text-white";
-  const colorBtn = isAdmin ? "bg-[#A67C00] text-white" : "bg-[#0A1E6A] text-white";
-  const colorHeader = isAdmin ? 'bg-[#A67C00]' : 'bg-[#0A1E6A]';
-
-  const go = (path: string) => router.push(`${path}?rol=${rol}`);
+  const go = (path: string) => router.push(`${path}?id=${adminId}`);
 
   const [filtros, setFiltros] = useState({
     fechaHora: "",
@@ -107,7 +101,7 @@ const handleReagendarSuccess = () => {
       <main className="flex-1 bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className={`text-3xl font-bold ${isAdmin ? "text-[#A67C00]" : "text-[#0A1E6A]"}`}>
+            <h2 className={`text-3xl font-bold ${!isAdmin ? "text-[#A67C00]" : "text-[#0A1E6A]"}`}>
               Consultar Citas
             </h2>
             {/* <button

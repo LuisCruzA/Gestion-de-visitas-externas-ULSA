@@ -33,7 +33,7 @@ interface FormProps {
   tocado: boolean;
 }
 interface SidebarProps {
-  rol: string;
+  isAdmin: boolean;
   showHeader?: boolean;
   headerTitle?: string;
   headerDescription?: string;
@@ -559,7 +559,7 @@ function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormPro
 }
 
 function Sidebar({
-  rol,
+  isAdmin,
   showHeader = false,
   headerTitle,
   headerDescription,
@@ -567,7 +567,6 @@ function Sidebar({
   mode,
 }: SidebarProps) {
   const router = useRouter();
-  const isAdmin = rol === "admin";
   const {
     paso,
     setPaso,
@@ -657,7 +656,7 @@ function Sidebar({
       <div className="min-h-screen flex flex-col font-poppins bg-gray-50">
         <nav className="bg-[#1E3A8A] shadow-xl px-10 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-white">
-            {isAdmin ? "Panel de Guardia" : "Panel Universitario"}
+            {!isAdmin ? "Panel de Guardia" : "Panel Universitario"}
           </h1>
           <button
             onClick={() => {router.push("/login"); sessionStorage.clear();}}
@@ -717,7 +716,7 @@ function Sidebar({
             </p>
           </div>
           <nav className="flex flex-col gap-4">
-            {!isAdmin && mode === "registro" && (
+            {isAdmin && mode === "registro" && (
               <button
                 onClick={() => setPaso(1)}
                 className={`text-left py-2 px-4 rounded-lg flex items-center gap-2 ${

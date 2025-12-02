@@ -16,11 +16,11 @@ export default function Sidebar({ isAdmin, colorSidebar, onNavigate, onLogout }:
             👤
           </div>
           <p className="mt-3 font-semibold text-lg text-white">
-            {isAdmin ? "Guardia" : "Universitario"}
+            {!isAdmin ? "Guardia" : "Administrativo"}
           </p>
         </div>
         <nav className="flex flex-col gap-4">
-          {!isAdmin && (
+          {isAdmin && (
             <button
               onClick={() => onNavigate("/Gestion/registro")}
               className="text-left py-2 px-4 rounded-lg flex items-center gap-2 text-white hover:bg-white/20 transition-all"

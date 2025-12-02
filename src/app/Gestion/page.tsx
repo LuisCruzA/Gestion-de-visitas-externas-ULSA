@@ -9,32 +9,39 @@ export default function BienvenidaPage() {
   const searchParams = useSearchParams();
 
   // Estado del rol
-  const [rol, setRol] = useState("externo");
   const [nombre, setNombre] = useState("");
+  const [isAdmin, setIsAdmin] = useState<boolean>();
+  const [areaUser, setAreaUser] = useState("");
+  const [idUser, setIdUser] = useState<Number>();
   const [accion, setAccion] = useState<string | null>(null);
 
   // Cargar rol desde URL o localStorage (sin error de render sincrónico)
   useEffect(() => {
-    const rolUrl = sessionStorage.getItem("rol");
+    const isAdmin = sessionStorage.getItem("isAdmin");
     const savedName = sessionStorage.getItem("nombre");
+    const idUser = sessionStorage.getItem("id");
+    const areaUser = sessionStorage.getItem("area");
 
-    if (!rolUrl) {
+
+    if (!idUser) {
       router.push("/login");
     } else {
-      setRol(rolUrl);
+      setIsAdmin(isAdmin === "true");
       setNombre(savedName || "");
+      setAreaUser(areaUser || "");
+      setIdUser(Number(idUser));
     }
 
     const actualizarRol = () => {
-      if (rolUrl) {
-        setRol(rolUrl);
+      if (areaUser) {
+        setAreaUser(areaUser);
         try {
-          localStorage.setItem("rol", rolUrl);
+          sessionStorage.setItem("area", areaUser);
         } catch {}
       } else {
         try {
-          const saved = localStorage.getItem("rol");
-          if (saved) setRol(saved);
+          const saved = localStorage.getItem("area");
+          if (saved) setAreaUser(saved);
         } catch {}
       }
     };
@@ -44,13 +51,11 @@ export default function BienvenidaPage() {
     return () => clearTimeout(timer);
   }, [searchParams]);
 
-  const isAdmin = rol === "admin";
-
   // 🎨 Colores dinámicos según rol
-  const bgGradient = isAdmin
+  const bgGradient = !isAdmin
     ? "from-[#5C4402] to-[#B9932C]"
     : "from-[#0A1E6A] to-[#1E3A8A]";
-  const btnGradient = isAdmin
+  const btnGradient = !isAdmin
     ? "from-[#D4AF37] to-[#FAD87A]"
     : "from-blue-500 to-cyan-400";
 
@@ -60,9 +65,9 @@ export default function BienvenidaPage() {
 
     // Navegación según la acción elegida
     if (tipo === "registrar") {
-      router.push(`/Gestion/registro?rol=${rol}`);
+      router.push(`/Gestion/registro?id=${idUser}`);
     } else if (tipo === "consultar") {
-      router.push(`/Gestion/consultas?rol=${rol}`);
+      router.push(`/Gestion/consultas?id=${idUser}`);
     } else if (tipo === "salir") {
       try {
         sessionStorage.clear();
@@ -72,7 +77,7 @@ export default function BienvenidaPage() {
   };
 
   // ⏳ Muestra un estado de carga si el rol aún no está definido
-  if (!rol) {
+  if (!idUser) {
     return (
       <div className="flex items-center justify-center h-screen text-gray-500">
         Cargando...
@@ -94,7 +99,7 @@ export default function BienvenidaPage() {
         {/* 🔸 Logo */}
         <div
           className={`w-20 h-20 ${
-            isAdmin
+            !isAdmin
               ? "bg-gradient-to-br from-yellow-300 to-amber-400"
               : "bg-gradient-to-br from-blue-400 to-cyan-300"
           } rounded-3xl flex items-center justify-center`}
@@ -112,7 +117,7 @@ export default function BienvenidaPage() {
 
         {/* 🔸 Botones de acción */}
         <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-          {!isAdmin && (
+          {isAdmin && (
             <button
               onClick={() => handleAccion("registrar")}
               className={`flex-1 py-3 rounded-xl bg-gradient-to-r ${btnGradient} text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.03] transition-transform`}
