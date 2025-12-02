@@ -50,6 +50,7 @@ export async function GET(req: Request) {
         fecha: "asc",
       }
     });
+    
 }
      // Determinar cuáles ya expiraron
      const ahora = new Date();
@@ -67,6 +68,10 @@ export async function GET(req: Request) {
            estado: "Expirado"
          }
        });
+
+
+     
+
 
 
        if (adminId === "4"){

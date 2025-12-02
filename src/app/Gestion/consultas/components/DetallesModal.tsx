@@ -21,28 +21,64 @@ export default function DetallesModal({
     const doc = new jsPDF();
 
     // Añadir título
-    doc.setFontSize(18);
-    doc.text('Detalles de la Cita', 14, 20);
+  // Título principal con fondo
+doc.setFillColor(33, 150, 243); // Azul bonito
+doc.rect(0, 0, 210, 30, 'F');   // Rectángulo de fondo
+doc.setTextColor(255, 255, 255);
+doc.setFontSize(22);
+doc.text('Detalles de la Cita', 105, 18, { align: 'center' });
 
-    // Detalles de la cita
-    doc.setFontSize(12);
-    doc.text(`Visitante: ${cita?.visitante.nombre}`, 14, 30);
-    doc.text(`Correo: ${cita?.visitante.correo}`, 14, 40);
-    doc.text(`Teléfono: ${cita?.visitante.celular}`, 14, 50);
-    doc.text(`Fecha de Nacimiento: ${cita?.visitante.fechaNac}`, 14, 60);
-    doc.text(`INE: ${cita?.visitante.ine}`, 14, 70);
-    doc.text(`Fecha de la cita: ${cita?.fecha}`, 14, 80);
-    doc.text(`Persona Visitada: ${cita?.personaVisitada || 'N/A'}`, 14, 90);
-    doc.text(`Área: ${cita?.area || 'N/A'}`, 14, 100);
-    doc.text(`Ingreso: ${cita?.visitante.medioIngresos?.[0]?.forma_ingreso || '—'}`, 14, 110);
+// Reset de colores
+doc.setTextColor(0, 0, 0);
 
-    if (cita?.visitante.medioIngresos?.[0]?.vehiculo) {
-      doc.text('Vehículo:', 14, 120);
-      doc.text(`Modelo: ${cita?.visitante.medioIngresos[0].vehiculo?.modelo || 'N/A'}`, 14, 130);
-      doc.text(`Marca: ${cita?.visitante.medioIngresos[0].vehiculo?.marca || 'N/A'}`, 14, 140);
-      doc.text(`Color: ${cita?.visitante.medioIngresos[0].vehiculo?.color || 'N/A'}`, 14, 150);
-      doc.text(`Placas: ${cita?.visitante.medioIngresos[0].vehiculo?.placas || 'N/A'}`, 14, 160);
-    }
+// Caja de información
+doc.setFillColor(245, 245, 245); // Fondo gris clarito
+doc.roundedRect(10, 40, 190, 140, 3, 3, 'F');
+
+// Línea decorativa
+doc.setDrawColor(33, 150, 243);
+doc.setLineWidth(0.8);
+doc.line(10, 38, 200, 38);
+
+// Contenido dentro de la caja
+let y = 55;
+doc.setFontSize(13);
+doc.setTextColor(40, 40, 40);
+
+// Función para imprimir líneas con mejor espaciado
+const write = (text: string | string[]) => {
+  doc.text(text, 18, y);
+  y += 10;
+};
+
+// Datos
+write(`Visitante: ${cita?.visitante.nombre}`);
+write(`Correo: ${cita?.visitante.correo}`);
+write(`Teléfono: ${cita?.visitante.celular}`);
+write(`Fecha de Nacimiento: ${cita?.visitante.fechaNac}`);
+write(`INE: ${cita?.visitante.ine}`);
+write(`Fecha de la cita: ${cita?.fecha}`);
+write(`Persona Visitada: ${cita?.personaVisitada || 'N/A'}`);
+write(`Área: ${cita?.area || 'N/A'}`);
+write(`Ingreso: ${cita?.visitante.medioIngresos?.[0]?.forma_ingreso || '—'}`);
+
+if (cita?.visitante.medioIngresos?.[0]?.vehiculo) {
+  y += 5;
+  doc.setFontSize(14);
+  doc.setTextColor(33, 150, 243);
+  doc.text("Vehículo:", 18, y);
+  y += 8;
+
+  doc.setFontSize(13);
+  doc.setTextColor(40, 40, 40);
+  write(`Modelo: ${cita?.visitante.medioIngresos[0].vehiculo?.modelo || 'N/A'}`);
+  write(`Marca: ${cita?.visitante.medioIngresos[0].vehiculo?.marca || 'N/A'}`);
+  write(`Color: ${cita?.visitante.medioIngresos[0].vehiculo?.color || 'N/A'}`);
+  write(`Placas: ${cita?.visitante.medioIngresos[0].vehiculo?.placas || 'N/A'}`);
+}
+
+write('Universidad La Salle - Sistema de Gestión de Visitas')
+
 
     // Descargar el PDF
     doc.save('detalles_cita.pdf');

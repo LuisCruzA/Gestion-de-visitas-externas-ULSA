@@ -87,7 +87,7 @@ export default function FilterSection({ isAdmin, filtros, onFiltrosChange }: Fil
       </div>
       <div className={`grid ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'} gap-4`}>
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-600 mb-2">Fecha y hora</label>
+          <label className="text-sm font-medium text-gray-600 mb-2">Fecha</label>
           <input
             type="date"
             className="px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"

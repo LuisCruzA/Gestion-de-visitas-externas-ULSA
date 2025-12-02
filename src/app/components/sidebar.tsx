@@ -497,6 +497,12 @@ function FormularioDatosCita({ form, errores, handleChange, tocado }: FormProps)
     "Departamento de Contabilidad",
     "Departamento de Marketing",
     "Secretaría Académica",
+    "Servicios Escolares",,
+    "Talleres",
+    "Coordinación",
+    "Deportes",
+    "Formación de la Fe",
+    "Dirección Académica",
     // Agrega todas las que necesites...
   ];
 
