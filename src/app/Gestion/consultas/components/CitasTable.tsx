@@ -215,7 +215,7 @@ export default function CitasTable({
                 Área
               </th>
 
-              {isAdmin ? (
+              {!isAdmin ? (
                 <>
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                     Placas/Modelo
@@ -237,7 +237,7 @@ export default function CitasTable({
               <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                 Estado
               </th>
-              {!isAdmin && (
+              {isAdmin && (
                 <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                   Acciones
                 </th>
@@ -256,8 +256,9 @@ export default function CitasTable({
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                   {cita.visitante.nombre}
                 </td>
-                {isAdmin  ? (
+                {!isAdmin  ? (
                   <>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{cita.area}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {cita.visitante.medioIngresos && cita.visitante.medioIngresos.length > 0 ? (
                         cita.visitante.medioIngresos[0].forma_ingreso === 'CARRO' ? (
@@ -315,7 +316,7 @@ export default function CitasTable({
                   </span>
                 </td>
 
-                {!isAdmin && (
+                {isAdmin && (
                   <td className="flex flex-col gap-2 px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {cita.estado === 'Actual' || 'Expirado'? (
                       <>

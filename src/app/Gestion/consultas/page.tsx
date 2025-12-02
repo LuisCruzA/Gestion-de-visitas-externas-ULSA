@@ -27,9 +27,11 @@ export default function ConsultasPage() {
       const id = sessionStorage.getItem("id");
       if (id) {
         setAdminId(id); // Establece el adminId desde sessionStorage
+        fetchCitas(id);
       }
     }
     setIsAdmin(isAdmin);
+
   }, []);
 
   // Definir la función fetchCitas aquí
