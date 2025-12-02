@@ -345,15 +345,7 @@ export default function CitasTable({
                           />
                         )}
 
-                        {/* Botón para Ver Detalles */}
-                        <button
-                          onClick={() => handleOpenDetallesModal(cita)} // Abre el modal de detalles
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-2 font-medium text-sm shadow-sm ml-2"
-                          title="Ver detalles"
-                        >
-                          <FiEye className="w-4 h-4" />
-                          Ver Detalles
-                        </button>
+                    
 
                       {/* Botón para Cancelar */}
 <button
@@ -371,7 +363,19 @@ export default function CitasTable({
                     )}
                   </td>
                 )}
+                 {/* Botón para Ver Detalles */}
+                 <td className="flex flex-row gap-2 px-1.5 py-[-6] whitespace-nowrap text-sm font-medium">
+            <button
+                          onClick={() => handleOpenDetallesModal(cita)} // Abre el modal de detalles
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-2 font text-sm shadow-sm ml-8 "
+                          title="Ver detalles"
+                        >
+                          <FiEye className="w-4 h-4" />
+                          Ver Detalles
+                        </button>
+                        </td>
               </tr>
+              
             ))}
           </tbody>
         </table>
