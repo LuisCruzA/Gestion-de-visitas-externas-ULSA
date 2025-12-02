@@ -13,7 +13,6 @@ export async function POST(req: Request) {
     fechaobj.setHours(fechaobj.getHours()-6)
     const inicio = new Date(fechaobj);
     const fin = new Date(fechaobj);
-    fin.setMinutes(inicio.getMinutes() + 30);
 
     // Verificar si el admin ya tiene una cita en ese horario
     const citaExistente = await prisma.cita.findFirst({
@@ -80,7 +79,8 @@ export async function POST(req: Request) {
       },
     });
 
-    
+    fin.setMinutes(inicio.getMinutes() + 30);
+
 
     // Obtener los detalles del admin y visitante para el correo
     const admin = await prisma.admin.findUnique({

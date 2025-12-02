@@ -5,6 +5,7 @@ import DetallesModal from './DetallesModal';
 import Swal from 'sweetalert2';
 
 export interface Cita {
+  adminId: number;
   id_cita: number;
   fecha: string;
   area: string | null;
@@ -255,7 +256,7 @@ export default function CitasTable({
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                   {cita.visitante.nombre}
                 </td>
-                {isAdmin ? (
+                {isAdmin  ? (
                   <>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {cita.visitante.medioIngresos && cita.visitante.medioIngresos.length > 0 ? (

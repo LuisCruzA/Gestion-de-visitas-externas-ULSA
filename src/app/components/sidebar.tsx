@@ -64,6 +64,7 @@ export function useFormLogic() {
   const [errores, setErrores] = useState<{[key: string]: string}>({});
   const [tocado, setTocado] = useState(false);
   const [exito, setExito] = useState(false);
+  
 
   useEffect(() => {
       const idadmin = sessionStorage.getItem("id");
