@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -11,15 +11,25 @@ interface NavBarProps {
 export default function NavBar({ rol = "externo" }: NavBarProps) {
   const router = useRouter();
   const [hovered, setHovered] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>();
+
+  useEffect(() => {
+      const isAdmin = sessionStorage.getItem("isAdmin");
+      const idUser = sessionStorage.getItem("id");  
+  
+      if (idUser) {
+        setIsAdmin(isAdmin === "true");
+      }
+
+    }, []);
 
   // Colores según el rol
-  const isAdmin = rol === "admin";
 
-  const colorFondo = isAdmin
+  const colorFondo = !isAdmin
     ? "from-[#D4AF37] to-[#B9932C]" // dorado
     : "from-[#0A1E6A] to-[#1E3A8A]"; // azul
 
-  const colorBoton = isAdmin
+  const colorBoton = !isAdmin
     ? "bg-gradient-to-r from-[#FAD87A] to-[#D4AF37] text-[#5C4402]"
     : "bg-gradient-to-r from-blue-500 to-cyan-400 text-white";
 

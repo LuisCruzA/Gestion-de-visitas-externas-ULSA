@@ -48,15 +48,15 @@ export default function LoginPage() {
       }
 
       // ✅ Guardar el rol en localStorage
-        const rol = data.admin.esSuperadmin ? "superadmin" : "admin";
-        sessionStorage.setItem("rol", rol);
+        sessionStorage.setItem("isAdmin", data.admin.esSuperadmin);
         sessionStorage.setItem("nombre", data.admin.nombre);
         sessionStorage.setItem("correo", data.admin.correo);
         sessionStorage.setItem("id", data.admin.id_admin);
         sessionStorage.setItem("area", data.admin.areaAdmin);
+        const id = sessionStorage.getItem("id")
 
       // ✅ Redirigir correctamente a /Gestion (pantalla de bienvenida)
-      router.push(`/Gestion?rol=${rol}`);
+      router.push(`/Gestion?id=${id}`);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

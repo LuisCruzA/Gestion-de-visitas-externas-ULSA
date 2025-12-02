@@ -7,34 +7,25 @@ import Sidebar from "../../components/sidebar";
 export default function RegistroPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [rol, setRol] = useState<string>("externo");
+  const [id, setId] = useState<Number>();
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  // ✅ Carga segura del rol sin error de cascada
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const rolUrl = searchParams.get("rol");
-    const saved = localStorage.getItem("rol");
+    const idUser = Number(searchParams.get("id"));
+    const isAdmin = sessionStorage.getItem("isAdmin") === "true";
+    setIsAdmin(isAdmin);
     
-    // Si el rol es admin (guardia), redirigir a consultas
-    if (rolUrl === "admin" || (!rolUrl && saved === "admin")) {
+    if (!isAdmin) {
       router.push("/Gestion/consultas?rol=admin");
       return;
     }
-
-    if (rolUrl && rolUrl !== rol) {
-      setTimeout(() => {
-        setRol(rolUrl);
-        localStorage.setItem("rol", rolUrl);
-      }, 0);
-    } else if (!rolUrl && saved && saved !== rol) {
-      setTimeout(() => setRol(saved), 0);
-    }
-  }, [searchParams, router, rol]);
+  }, []);
 
   return (
     <div className="min-h-screen">
       <Sidebar 
-        rol={rol}
+        isAdmin={isAdmin}
         mode="registro"
         showHeader={true}
         headerTitle="Registrar nueva visita"
