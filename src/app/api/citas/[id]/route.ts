@@ -60,9 +60,9 @@ export async function DELETE(
     });
 
     // Eliminar visitante
-    await prisma.visitante.delete({
-      where: { id_visitante: visitanteId }
-    });
+    //await prisma.visitante.delete({
+      //where: { id_visitante: visitanteId }
+    //});
 
 
     //  CORREO PARA ADMIN

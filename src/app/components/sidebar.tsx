@@ -4,6 +4,7 @@ import { ChangeEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiLogOut, FiList, FiPlus } from "react-icons/fi";
 import { motion, AnimatePresence, } from "framer-motion";
+import Swal from "sweetalert2";
 
 
 // Formulario y lógica del formulario
@@ -31,6 +32,7 @@ interface FormProps {
   errores: { [key in keyof FormData]?: string }; // Ahora, los errores tienen claves de FormData
   handleChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   tocado: boolean;
+  usuarioExistente?: any;
 }
 interface SidebarProps {
   isAdmin: boolean;
@@ -64,7 +66,87 @@ export function useFormLogic() {
   const [errores, setErrores] = useState<{[key: string]: string}>({});
   const [tocado, setTocado] = useState(false);
   const [exito, setExito] = useState(false);
-  
+
+  const [usuarioExistente, setUsuarioExistente] = useState<any>(null);
+
+useEffect(() => {
+  if (form.ine.length >= 8 && form.correo.includes('@')) {
+    const timer = setTimeout(() => {
+      verificarUsuarioExistente(form.ine, form.correo);
+    }, 800); // Debounce de 800ms
+    
+    return () => clearTimeout(timer);
+  }
+}, [form.ine, form.correo]);
+
+  const verificarUsuarioExistente = async (ine: string, correo: string) => {
+    try {
+      const response = await fetch(`/api/visitantes/verificar?ine=${ine}&correo=${correo}`);
+      const data = await response.json();
+      
+      if (data.error === "CONFLICTO") {
+        const confirmar = window.confirm(
+          ` ${data.mensaje}\n\n` +
+          `INE: ${ine}\n` +
+          `Correo: ${correo}\n\n` +
+          `¿Deseas continuar con el registro como nuevo usuario?`
+        );
+        
+        if (!confirmar) {
+          return false;
+        }
+        setUsuarioExistente(null);
+        return false;
+      }
+      
+      if (data.existe) {
+        setUsuarioExistente(data.visitante);
+        
+        const fechaNacimiento = data.visitante.fechaNac 
+          ? new Date(data.visitante.fechaNac).toISOString().split('T')[0]
+          : "";
+        
+        setForm(prev => ({
+          ...prev,
+          nombre: data.visitante.nombre,
+          genero: data.visitante.genero,
+          nacimiento: fechaNacimiento,
+          telefono: data.visitante.celular,
+          correo: data.visitante.correo,
+          ine: data.visitante.ine,
+        }));
+        
+        // ✅ Mostrar qué coincidió
+        if (data.coincidencias.ine && data.coincidencias.correo) {
+          Swal.fire({
+            title: "Usuario encontrado",
+            text: "INE y correo coinciden",
+            icon: "success",
+          });
+        } else if (data.coincidencias.ine) {
+          Swal.fire({
+            title: "Usuario encontrado por INE.",
+            text: "",
+            icon: "info",
+          });
+        } else if (data.coincidencias.correo) {
+          Swal.fire({
+            title: "Usuario encontrado",
+            text: "Usuario encontrado por correo. Verifica que el INE sea correcto.",
+            icon: "info",
+          });
+        }
+        
+        return true;
+      }
+      
+      setUsuarioExistente(null);
+      return false;
+    } catch (error) {
+      console.error("Error al verificar usuario:", error);
+      return false;
+    }
+  };
 
   useEffect(() => {
       const idadmin = sessionStorage.getItem("id");
@@ -74,7 +156,7 @@ export function useFormLogic() {
       }
     }, []);
 
-  const validarPaso = () => {
+  const validarPaso = async () => {
     const nuevosErrores: {[key: string]: string} = {};
     if (paso === 1) {
       if (!form.nombre.trim()) nuevosErrores.nombre = "El nombre es obligatorio.";
@@ -84,6 +166,10 @@ export function useFormLogic() {
       if (!form.nacimiento.trim()) {
         nuevosErrores.nacimiento = "La fecha de nacimiento es obligatoria.";
       } else {
+        if (form.ine.trim() && form.correo.trim()) {
+          const existe = await verificarUsuarioExistente(form.ine, form.correo);
+        }
+
         // 🧠 Validar que tenga al menos 15 años
         const fechaNacimiento = new Date(form.nacimiento);
         const hoy = new Date();
@@ -93,8 +179,8 @@ export function useFormLogic() {
           fechaNacimiento.getFullYear() -
           (hoy < new Date(hoy.getFullYear(), fechaNacimiento.getMonth(), fechaNacimiento.getDate()) ? 1 : 0);
 
-        if (edad < 15) {
-          nuevosErrores.nacimiento = "Debes tener al menos 15 años para continuar.";
+        if (edad < 18) {
+          nuevosErrores.nacimiento = "Debes tener al menos 18 años para continuar.";
         }
       }
       if (!form.telefono.trim()) nuevosErrores.telefono = "El teléfono es obligatorio.";
@@ -110,6 +196,10 @@ export function useFormLogic() {
       }
     }
     if (paso === 2) {
+      if (!form.area || form.area.trim() === "" || form.area === "Otro") {
+        nuevosErrores.area = "Debes seleccionar o especificar un área.";
+      }
+
       if (!form.fechaVisita.trim()) {
         nuevosErrores.fechaVisita = "Debes ingresar fecha y hora.";
       } else {
@@ -298,6 +388,7 @@ export function useFormLogic() {
     });
     setErrores({});
     setTocado(false);
+    setUsuarioExistente(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -315,6 +406,8 @@ export function useFormLogic() {
     tocado,
     exito,
     setExito,
+    usuarioExistente,
+    verificarUsuarioExistente,
     handleChange,
     siguientePaso,
     pasoAnterior,
@@ -323,7 +416,7 @@ export function useFormLogic() {
   };
 }
 
-function FormularioDatosPersonales({ form, errores, handleChange, tocado }: FormProps) {
+function FormularioDatosPersonales({ form, errores, handleChange, tocado, usuarioExistente }: FormProps) {
   return (
     <motion.div
       key="paso1"
@@ -334,20 +427,24 @@ function FormularioDatosPersonales({ form, errores, handleChange, tocado }: Form
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
-          { name: "nombre", label: "Nombre completo", type: "text" },
-          { name: "ine", label: "INE", type: "text" },
-          { name: "correo", label: "Correo electrónico", type: "email" },
-          { name: "nacimiento", label: "Fecha de nacimiento", type: "date" },
-          { name: "telefono", label: "Número celular", type: "text" },
-        ].map(({ name, label, type }) => (
+          { name: "nombre", label: "Nombre completo", type: "text", disabled: !!usuarioExistente },
+          { name: "ine", label: "INE", type: "text", disabled: !!usuarioExistente },
+          { name: "correo", label: "Correo electrónico", type: "email", disabled: !!usuarioExistente },
+          { name: "nacimiento", label: "Fecha de nacimiento", type: "date", disabled: !!usuarioExistente },
+          { name: "telefono", label: "Número celular", type: "text", disabled: false },
+
+        ].map(({ name, label, type, disabled }) => (
           <div key={name} className="flex flex-col">
             <label className="text-gray-600 mb-1">{label}</label>
             <input
               type={type}
               name={name}
-              value={form[name as keyof FormData]} // Aquí indicamos que `name` es una clave de FormData
+              value={form[name as keyof FormData]}
               onChange={handleChange}
-              className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              disabled={disabled}
+              className={`border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-gray-50'
+              }`}
             />
             {tocado && errores[name as keyof FormData] && ( // Usamos `name` con `keyof FormData`
               <span className="text-red-500 text-sm mt-1">{errores[name as keyof FormData]}</span>
@@ -375,7 +472,64 @@ function FormularioDatosPersonales({ form, errores, handleChange, tocado }: Form
     </motion.div>
   );
 }
+
 function FormularioDatosCita({ form, errores, handleChange, tocado }: FormProps) {
+  const areas = [
+    "Rectoría",
+    "Dirección General",
+    "Recursos Humanos",
+    "Finanzas",
+    "Servicios Escolares",
+    "Biblioteca Central",
+    "Biblioteca de Ingeniería",
+    "Laboratorio de Química",
+    "Laboratorio de Física",
+    "Laboratorio de Computación",
+    "Centro de Cómputo",
+    "Deportes",
+    "Cafetería Principal",
+    "Cafetería Norte",
+    "Mantenimiento",
+    "Sistemas",
+    "Auditorio Principal",
+    "Sala de Juntas A",
+    "Sala de Juntas B",
+    "Departamento de Contabilidad",
+    "Departamento de Marketing",
+    "Secretaría Académica",
+    // Agrega todas las que necesites...
+  ];
+
+  const [busquedaArea, setBusquedaArea] = useState("");
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const [areasFiltradas, setAreasFiltradas] = useState<string[]>([]);
+
+  // Filtrar áreas mientras escribe
+  useEffect(() => {
+    if (busquedaArea.trim() === "") {
+      setAreasFiltradas([]);
+      setMostrarSugerencias(false);
+    } else {
+      const filtradas = areas.filter(area =>
+        area.toLowerCase().includes(busquedaArea.toLowerCase())
+      );
+      setAreasFiltradas(filtradas);
+      setMostrarSugerencias(true);
+    }
+  }, [busquedaArea]);
+
+  const seleccionarArea = (area: string) => {
+    setBusquedaArea(area);
+    const event = {
+      target: {
+        name: "area",
+        value: area
+      }
+    } as any;
+    handleChange(event);
+    setMostrarSugerencias(false);
+  };
+
   return (
     <motion.div
       key="paso2"
@@ -383,89 +537,126 @@ function FormularioDatosCita({ form, errores, handleChange, tocado }: FormProps)
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 40 }}
       transition={{ duration: 0.5 }}
+      className="space-y-6"
     >
-      <div className="flex flex-col w-full max-w-md mx-auto">
-        <label className="text-gray-600 mb-1">Fecha y horario</label>
+      {/* Fecha y horario */}
+      <div className="flex flex-col">
+        <label className="text-gray-700 font-medium mb-2">
+          Fecha y horario de la visita
+        </label>
         <input
           type="datetime-local"
           name="fechaVisita"
           value={form.fechaVisita}
           onChange={handleChange}
-          className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
         {tocado && errores.fechaVisita && (
-          <span className="text-red-500 text-sm mt-1">{errores.fechaVisita}</span>
+          <span className="text-red-500 text-sm mt-1 flex items-center gap-1">
+            {errores.fechaVisita}
+          </span>
         )}
+        <p className="text-xs text-gray-500 mt-1">
+          Horario: Lun-Vie 8:00-20:00 | Sáb 8:00-16:00
+        </p>
       </div>
 
-      {/* Pregunta si conoce el área o la persona a visitar */}
-      <div className="flex flex-col mt-10 items-center">
-        <label className="text-gray-600 mb-1">¿Conoces el área o la persona a visitar?</label>
+      {/* Autocomplete de Área */}
+      <div className="flex flex-col relative">
+        <label className="text-gray-700 font-medium mb-2">
+          ¿A qué área te diriges?
+        </label>
+        <input
+          type="text"
+          value={busquedaArea}
+          onChange={(e) => setBusquedaArea(e.target.value)}
+          onFocus={() => busquedaArea && setMostrarSugerencias(true)}
+          placeholder="Escribe para buscar un área..."
+          className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+        />
+        
+        {/* Dropdown de sugerencias */}
+        {mostrarSugerencias && areasFiltradas.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-10"
+          >
+            {areasFiltradas.map((area, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => seleccionarArea(area)}
+                className="w-full text-left px-4 py-3 hover:bg-blue-50 transition border-b border-gray-100 last:border-b-0"
+              >
+                <span className="text-gray-800">{area}</span>
+              </button>
+            ))}
+          </motion.div>
+        )}
 
-        <div className="flex items-center mb-2">
-          <input
-            type="radio"
-            id="areaConocida"
-            name="conoces"
-            value="si"
-            checked={form.conoces === "si"}
-            onChange={handleChange}
-            className="mr-2"
-          />
-          <label htmlFor="areaConocida" className="text-gray-600">Sí</label>
+        {/* Mensaje si no hay resultados */}
+        {mostrarSugerencias && busquedaArea && areasFiltradas.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-10"
+          >
+            <p className="text-gray-500 text-sm">
+              No se encontraron áreas. Escribe el nombre manualmente.
+            </p>
+          </motion.div>
+        )}
 
-          <input
-            type="radio"
-            id="areaNoConocida"
-            name="conoces"
-            value="no"
-            checked={form.conoces === "no"}
-            onChange={handleChange}
-            className="ml-4 mr-2"
-          />
-          <label htmlFor="areaNoConocida" className="text-gray-600">No</label>
-        </div>
-      </div>
-
-      {/* Si "Sí" es seleccionado, mostramos los campos adicionales */}
-      {form.conoces === "si" && (
-        <>
-          <div className="flex flex-col">
-            <label className="text-gray-600 mb-1">Área</label>
-            <input
-              name="area"
-              value={form.area || ""}
-              onChange={handleChange}
-              className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        {/* Mostrar área seleccionada */}
+        {form.area && !mostrarSugerencias && (
+          <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+            ✓ Área seleccionada: <strong>{form.area}</strong>
+            <button
+              type="button"
+              onClick={() => {
+                setBusquedaArea("");
+                const event = {
+                  target: { name: "area", value: "" }
+                } as any;
+                handleChange(event);
+              }}
+              className="text-red-500 hover:text-red-700 ml-2"
             >
-              
-            </input>
-            {tocado && errores.area && (
-              <span className="text-red-500 text-sm mt-1">{errores.area}</span>
-            )}
+              ✕
+            </button>
           </div>
+        )}
 
-          <div className="flex flex-col">
-            <label className="text-gray-600 mb-1">Persona a visitar</label>
-            <input
-              type="text"
-              name="personaVisita"
-              value={form.personaVisita}
-              onChange={handleChange}
-              className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            {tocado && errores.personaVisita && (
-              <span className="text-red-500 text-sm mt-1">{errores.personaVisita}</span>
-            )}
-          </div>
-        </>
-      )}
+        {tocado && errores.area && (
+          <span className="text-red-500 text-sm mt-1">⚠️ {errores.area}</span>
+        )}
+        
+        <p className="text-xs text-gray-500 mt-1">
+          Si no encuentras el área, escríbela manualmente
+        </p>
+      </div>
 
+      {/* Persona a visitar (opcional) */}
+      <div className="flex flex-col">
+        <label className="text-gray-700 font-medium mb-2">
+          Persona a visitar <span className="text-gray-400 text-sm">(Opcional)</span>
+        </label>
+        <input
+          type="text"
+          name="personaVisita"
+          value={form.personaVisita || ""}
+          onChange={handleChange}
+          placeholder="Nombre de la persona (si aplica)"
+          className="border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Si no sabes a quién visitar específicamente, déjalo en blanco
+        </p>
+      </div>
     </motion.div>
   );
 }
-
-
 
 function FormularioMedioIngreso({ form, errores, handleChange, tocado }: FormProps) {
   return (
@@ -575,6 +766,8 @@ function Sidebar({
     tocado,
     exito,
     setExito,
+    usuarioExistente,
+    verificarUsuarioExistente,
     handleChange,
     siguientePaso,
     pasoAnterior,
@@ -606,7 +799,14 @@ function Sidebar({
     const data = {
       fecha: form.fechaVisita,
       adminId: idAdmin,
-      visitante: {
+      visitante: usuarioExistente ? {
+        id: usuarioExistente.id_visitante, // ✅ Enviar ID si existe
+        nombre: form.nombre,
+        genero: form.genero,
+        fechaNac: form.nacimiento,
+        celular: form.telefono,
+      } : {
+        // Crear nuevo visitante
         nombre: form.nombre,
         genero: form.genero,
         fechaNac: form.nacimiento,
@@ -615,18 +815,17 @@ function Sidebar({
         celular: form.telefono,
       },
       cita: {
-        area: form.area,  // 'area' va aquí directamente
+        area: form.area,
         personaVisitada: form.personaVisita
       },
       medioIngreso: {
         forma_ingreso: form.medioIngreso,
-        
       },
       vehiculo: form.medioIngreso === "CARRO" ? {
         marca: form.marca,
         modelo: form.modelo,
-        placas:form.placas,
-        color:form.color
+        placas: form.placas,
+        color: form.color
       } : null,
     };
     console.log("Datos a enviar:", data); // Aquí verifica que `area` esté en `data`
@@ -765,6 +964,7 @@ function Sidebar({
                       errores={errores}
                       handleChange={handleChange}
                       tocado={tocado}
+                      usuarioExistente={usuarioExistente}
                     />
                   </>
                 )}
